@@ -54,7 +54,15 @@ class TicketService
         $html = str_replace('{{ customer_name }}', $customerName, $html);
         $html = str_replace('{{ event_name }}', $eventName, $html);
         $html = str_replace('{{ category_name }}', $categoryName, $html);
-        $html = str_replace('{{ qr_code }}', '<img src="'. $qrCodeSvg . '" alt="QR Code" style="width: 150px; height: 150px;" />', $html);
+        
+        $eventDate = $ticket->ticketCategory->event->start_date ? \Carbon\Carbon::parse($ticket->ticketCategory->event->start_date)->format('d.m.Y H:i') : '';
+        $vendorName = $ticket->ticketCategory->event->vendor ? $ticket->ticketCategory->event->vendor->name : '';
+        $seatInfo = $ticket->seat_info ? 'Platz ' . $ticket->seat_info : 'Freie Platzwahl';
+        
+        $html = str_replace('{{ event_date }}', $eventDate, $html);
+        $html = str_replace('{{ vendor_name }}', $vendorName, $html);
+        $html = str_replace('{{ seat_info }}', $seatInfo, $html);
+        $html = str_replace('{{ qr_code }}', '<img src="'. $qrCodeSvg . '" alt="QR Code" style="width: 100%; height: 100%;" />', $html);
 
         // Apply CSS
         $fullHtml = '<html><head><style>' . $template->css_content . '</style></head><body>' . $html . '</body></html>';

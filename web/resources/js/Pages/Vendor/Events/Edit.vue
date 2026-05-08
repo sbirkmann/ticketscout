@@ -25,6 +25,7 @@ const form = useForm({
     start_date: props.event.start_date.slice(0, 16),
     end_date: props.event.end_date ? props.event.end_date.slice(0, 16) : '',
     status: props.event.status,
+    show_remaining_tickets: props.event.show_remaining_tickets,
     image: null,
     tags: props.event.tags ? props.event.tags.join(', ') : '',
     artist_ids: props.event.artists ? props.event.artists.map(a => a.id) : [],
@@ -258,6 +259,18 @@ const destroy = () => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Settings -->
+                        <div>
+                            <h3 class="text-lg font-bold text-surface-900 border-b border-surface-200 pb-2 mb-4">Einstellungen</h3>
+                            <label class="flex items-center gap-3 p-4 rounded-xl border border-surface-200 hover:bg-surface-50 cursor-pointer transition-colors mb-4">
+                                <input type="checkbox" v-model="form.show_remaining_tickets" class="rounded border-surface-300 text-brand-500 shadow-sm focus:ring-brand-500">
+                                <div>
+                                    <span class="block font-bold text-surface-900">Restplätze im Frontend anzeigen</span>
+                                    <span class="text-sm text-surface-500">Zeigt an, wie viele Tickets pro Kategorie noch verfügbar sind (erzeugt Dringlichkeit/FOMO).</span>
+                                </div>
+                            </label>
                         </div>
 
                         <!-- Status & Submit -->

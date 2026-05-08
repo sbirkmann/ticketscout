@@ -10,9 +10,11 @@ use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 
 Route::get('/', [FrontendController::class, 'index'])->name('home');
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/locations', [FrontendController::class, 'locations'])->name('locations.index');
 Route::get('/location/{slug}', [FrontendController::class, 'showLocation'])->name('locations.show');
 Route::get('/category/{slug}', [FrontendController::class, 'showCategory'])->name('categories.show');
+Route::get('/artists', [FrontendController::class, 'artists'])->name('artists.index');
 Route::get('/artist/{slug}', [FrontendController::class, 'showArtist'])->name('artists.show');
 Route::get('/event/{slug}', [FrontendController::class, 'showEvent'])->name('event.show');
 
@@ -58,10 +60,19 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     // Location Management
     Route::get('/locations', [\App\Http\Controllers\Superadmin\LocationController::class, 'index'])->name('locations.index');
     Route::post('/locations', [\App\Http\Controllers\Superadmin\LocationController::class, 'store'])->name('locations.store');
-    Route::put('/locations/{location}', [\App\Http\Controllers\Superadmin\LocationController::class, 'update'])->name('locations.update');
+    Route::post('/locations/{location}', [\App\Http\Controllers\Superadmin\LocationController::class, 'update'])->name('locations.update');
     Route::delete('/locations/{location}', [\App\Http\Controllers\Superadmin\LocationController::class, 'destroy'])->name('locations.destroy');
     Route::patch('/locations/{location}/toggle-global', [\App\Http\Controllers\Superadmin\LocationController::class, 'toggleGlobal'])->name('locations.toggle-global');
-});
+
+    // Event Management
+    Route::get('/events', [\App\Http\Controllers\Superadmin\EventController::class, 'index'])->name('events.index');
+    Route::delete('/events/{event}', [\App\Http\Controllers\Superadmin\EventController::class, 'destroy'])->name('events.destroy');
+
+    // Orders Management
+    Route::get('/orders', [\App\Http\Controllers\Superadmin\OrderController::class, 'index'])->name('orders.index');
+
+    // Settings
+    Route::get('/settings', [\App\Http\Controllers\Superadmin\SettingController::class, 'index'])->name('settings.index');});
 
 Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Vendor\DashboardController::class, 'index'])->name('dashboard');
@@ -69,7 +80,6 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     // Invoices
     Route::get('/invoices', [\App\Http\Controllers\Vendor\InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('/invoices/{invoice}/download', [\App\Http\Controllers\Vendor\InvoiceController::class, 'download'])->name('invoices.download');
-
     // Locations & Seating Plans
     Route::resource('locations.seating-plans', \App\Http\Controllers\Vendor\SeatingPlanController::class);
 
@@ -86,6 +96,11 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     // Ticket Templates
     Route::resource('templates', \App\Http\Controllers\Vendor\TicketTemplateController::class)->names('templates');
 
+    // Orders
+    Route::get('/orders', [\App\Http\Controllers\Vendor\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{id}', [\App\Http\Controllers\Vendor\OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{id}/resend', [\App\Http\Controllers\Vendor\OrderController::class, 'resendTickets'])->name('orders.resend');
+
     // Addon Management (nested under events)
     Route::post('/events/{event}/addons', [\App\Http\Controllers\Vendor\AddonController::class, 'store'])->name('events.addons.store');
     Route::put('/events/{event}/addons/{addon}', [\App\Http\Controllers\Vendor\AddonController::class, 'update'])->name('events.addons.update');
@@ -101,6 +116,8 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
 Route::middleware(['auth', 'role:vendor'])->group(function () {
     Route::get('/stripe/connect', [StripeController::class, 'connect'])->name('stripe.connect');
 });
+
+Route::post('/stripe/webhook', [\App\Http\Controllers\StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
 Route::middleware(['auth', 'role:scanner'])->prefix('scanner')->name('scanner.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Scanner\DashboardController::class, 'index'])->name('dashboard');

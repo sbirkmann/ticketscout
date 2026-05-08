@@ -28,6 +28,7 @@ class LocationController extends Controller
             'country' => 'required|string',
             'description' => 'nullable|string',
             'is_global' => 'boolean',
+            'banner_image' => 'nullable|image|max:5120',
         ]);
 
         $slug = \Illuminate\Support\Str::slug($validated['name']);
@@ -36,7 +37,14 @@ class LocationController extends Controller
             $slug = \Illuminate\Support\Str::slug($validated['name']) . '-' . $i++;
         }
 
-        Location::create(array_merge($validated, ['slug' => $slug]));
+        $data = \Illuminate\Support\Arr::except($validated, ['banner_image']);
+        $data['slug'] = $slug;
+
+        if ($request->hasFile('banner_image')) {
+            $data['banner_image_path'] = $request->file('banner_image')->store('locations', 'public');
+        }
+
+        Location::create($data);
 
         return back()->with('success', 'Location erfolgreich erstellt.');
     }
@@ -51,9 +59,16 @@ class LocationController extends Controller
             'country' => 'required|string',
             'description' => 'nullable|string',
             'is_global' => 'boolean',
+            'banner_image' => 'nullable|image|max:5120',
         ]);
 
-        $location->update($validated);
+        $data = \Illuminate\Support\Arr::except($validated, ['banner_image']);
+
+        if ($request->hasFile('banner_image')) {
+            $data['banner_image_path'] = $request->file('banner_image')->store('locations', 'public');
+        }
+
+        $location->update($data);
 
         return back()->with('success', 'Location aktualisiert.');
     }

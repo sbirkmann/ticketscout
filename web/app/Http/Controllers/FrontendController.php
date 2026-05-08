@@ -41,6 +41,15 @@ class FrontendController extends Controller
         ]);
     }
 
+    public function artists()
+    {
+        $artists = \App\Models\Artist::where('is_published', true)->get();
+
+        return Inertia::render('Artists/Index', [
+            'artists' => $artists
+        ]);
+    }
+
     public function showEvent($slug)
     {
         $event = Event::where('slug', $slug)

@@ -99,11 +99,65 @@ function checkout() {
     const addonsParam = JSON.stringify(selectedAddons.value);
     router.get(route('checkout.index', props.event.slug), { tickets: ticketsParam, addons: addonsParam });
 }
+const minPrice = computed(() => {
+    if (!props.event.ticket_categories || props.event.ticket_categories.length === 0) return 0;
+    return Math.min(...props.event.ticket_categories.map(c => parseFloat(c.price)));
+});
+
+const schemaMarkup = computed(() => {
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": props.event.title,
+        "startDate": props.event.start_date,
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+        "description": props.event.description || props.event.title,
+        "image": props.event.image_path ? [`${window.location.origin}/storage/${props.event.image_path}`] : [],
+        "offers": {
+            "@type": "Offer",
+            "url": window.location.href,
+            "price": minPrice.value,
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/InStock",
+            "validFrom": props.event.created_at
+        }
+    };
+    
+    if (props.event.end_date) {
+        schema.endDate = props.event.end_date;
+    }
+    
+    if (props.event.location) {
+        schema.location = {
+            "@type": "Place",
+            "name": props.event.location.name,
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": props.event.location.address,
+                "addressLocality": props.event.location.city,
+                "postalCode": props.event.location.zip,
+                "addressCountry": props.event.location.country || "DE"
+            }
+        };
+    }
+    
+    if (props.event.artists && props.event.artists.length > 0) {
+        schema.performer = props.event.artists.map(artist => ({
+            "@type": "PerformingGroup",
+            "name": artist.name
+        }));
+    }
+    
+    return JSON.stringify(schema);
+});
 </script>
 
 <template>
-    <Head :title="`${event.title} – Tickets kaufen | Ticketsout24`">
+    <Head>
+        <title>{{ event.title }} – Tickets kaufen | Ticketsout24</title>
         <meta name="description" :content="`${event.title} am ${formatDate(event.start_date)} in ${event.location?.name}. Jetzt Tickets sichern auf Ticketsout24!`" />
+        <component is="script" type="application/ld+json" v-html="schemaMarkup"></component>
     </Head>
 
     <div class="min-h-screen bg-surface-50 font-sans selection:bg-brand-500 selection:text-white">
@@ -264,8 +318,9 @@ function checkout() {
                                             <span v-if="cat.is_default" class="text-xs bg-brand-100 text-brand-600 px-2 py-0.5 rounded-full font-medium">Standard</span>
                                         </div>
                                         <p class="text-brand-600 font-bold">{{ parseFloat(cat.price).toFixed(2).replace('.',',') }} €</p>
-                                        <p v-if="cat.quantity != null" class="text-xs text-surface-400 mt-0.5">
-                                            {{ Math.max(0, cat.quantity - (cat.sold || 0)) }} verfügbar
+                                        <p v-if="cat.quantity != null && event.show_remaining_tickets !== false" class="text-xs mt-0.5" :class="(cat.quantity - (cat.sold || 0)) < 10 ? 'text-red-500 font-bold' : 'text-surface-400'">
+                                            <span v-if="(cat.quantity - (cat.sold || 0)) < 10">Nur noch {{ Math.max(0, cat.quantity - (cat.sold || 0)) }} Tickets verfügbar!</span>
+                                            <span v-else>{{ Math.max(0, cat.quantity - (cat.sold || 0)) }} verfügbar</span>
                                         </p>
                                     </div>
                                     <!-- +/- Stepper -->

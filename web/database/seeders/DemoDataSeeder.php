@@ -156,6 +156,37 @@ class DemoDataSeeder extends Seeder
             ['event_id' => $festivalEvent->id, 'name' => 'Camping + 3-Tage-Ticket', 'price' => 199.00, 'quantity' => 2000, 'sold' => 0]
         );
 
+        // 5. Artists
+        $artist1 = \App\Models\Artist::updateOrCreate(['slug' => 'die-rocker'], [
+            'name' => 'Die Rocker',
+            'slug' => 'die-rocker',
+            'bio' => 'Deutschlands beste Rockband.',
+        ]);
+        $rockEvent->artists()->syncWithoutDetaching([$artist1->id]);
+
+        $artist2 = \App\Models\Artist::updateOrCreate(['slug' => 'max-lacher'], [
+            'name' => 'Max Lacher',
+            'slug' => 'max-lacher',
+            'bio' => 'Der Stand-up Star.',
+        ]);
+        $comedyEvent->artists()->syncWithoutDetaching([$artist2->id]);
+
+        // 6. Seating Plans
+        $seatingPlan = \App\Models\SeatingPlan::updateOrCreate(['name' => 'Konzert Bestuhlung'], [
+            'location_id' => $stadium->id,
+            'name' => 'Konzert Bestuhlung',
+            'bg_image_path' => null,
+            'layout_data' => [
+                'elements' => [
+                    ['id' => 'S1', 'type' => 'seat', 'x' => 100, 'y' => 100, 'label' => 'Reihe 1 Platz 1', 'color' => '#14b8a6', 'radius' => 15],
+                    ['id' => 'S2', 'type' => 'seat', 'x' => 150, 'y' => 100, 'label' => 'Reihe 1 Platz 2', 'color' => '#14b8a6', 'radius' => 15],
+                    ['id' => 'S3', 'type' => 'seat', 'x' => 200, 'y' => 100, 'label' => 'Reihe 1 Platz 3', 'color' => '#14b8a6', 'radius' => 15],
+                ]
+            ],
+        ]);
+        
+        $rockEvent->update(['seating_plan_id' => $seatingPlan->id]);
+
         echo "Demo Daten erfolgreich erstellt!\n";
     }
 }

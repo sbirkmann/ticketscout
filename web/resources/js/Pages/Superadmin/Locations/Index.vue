@@ -7,6 +7,7 @@ const props = defineProps({
 });
 
 const showCreateModal = ref(false);
+const editingLocation = ref(null);
 
 const form = useForm({
     name: '',
@@ -16,15 +17,47 @@ const form = useForm({
     country: 'Deutschland',
     description: '',
     is_global: false,
+    banner_image: null,
 });
 
+function openModal(location = null) {
+    editingLocation.value = location;
+    if (location) {
+        form.name = location.name;
+        form.address = location.address;
+        form.city = location.city;
+        form.zip = location.zip;
+        form.country = location.country;
+        form.description = location.description || '';
+        form.is_global = !!location.is_global;
+        form.banner_image = null;
+    } else {
+        form.reset();
+        form.banner_image = null;
+    }
+    showCreateModal.value = true;
+}
+
 function submit() {
-    form.post(route('superadmin.locations.store'), {
-        onSuccess: () => {
-            showCreateModal.value = false;
-            form.reset();
-        }
-    });
+    if (editingLocation.value) {
+        form.post(route('superadmin.locations.update', editingLocation.value.id), {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                showCreateModal.value = false;
+                form.reset();
+            }
+        });
+    } else {
+        form.post(route('superadmin.locations.store'), {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                showCreateModal.value = false;
+                form.reset();
+            }
+        });
+    }
 }
 
 function toggleGlobal(location) {
@@ -35,6 +68,10 @@ function destroy(location) {
     if (confirm(`Location "${location.name}" wirklich löschen?`)) {
         router.delete(route('superadmin.locations.destroy', location.id));
     }
+}
+
+function handleImageUpload(e) {
+    form.banner_image = e.target.files[0];
 }
 </script>
 
@@ -59,7 +96,7 @@ function destroy(location) {
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div class="flex justify-between items-center mb-8">
                 <h1 class="font-display text-3xl font-black text-surface-900">Locations verwalten</h1>
-                <button @click="showCreateModal = true" class="bg-brand-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-600 transition-colors flex items-center gap-2 shadow-md">
+                <button @click="openModal()" class="bg-brand-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-600 transition-colors flex items-center gap-2 shadow-md">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                     Neue Location
                 </button>
@@ -93,6 +130,9 @@ function destroy(location) {
                                     <Link :href="route('locations.show', loc.slug)" target="_blank" class="text-xs text-surface-500 hover:text-brand-600 font-medium px-3 py-1 rounded-lg bg-surface-100 hover:bg-brand-50 transition-colors">
                                         Ansehen
                                     </Link>
+                                    <button @click="openModal(loc)" class="text-xs text-blue-500 hover:text-blue-700 font-medium px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+                                        Bearbeiten
+                                    </button>
                                     <button @click="destroy(loc)" class="text-xs text-red-500 hover:text-red-700 font-medium px-3 py-1 rounded-lg bg-red-50 hover:bg-red-100 transition-colors">
                                         Löschen
                                     </button>
@@ -110,7 +150,7 @@ function destroy(location) {
         <!-- Create Modal -->
         <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8">
-                <h2 class="font-display font-bold text-2xl text-surface-900 mb-6">Neue Location</h2>
+                <h2 class="font-display font-bold text-2xl text-surface-900 mb-6">{{ editingLocation ? 'Location bearbeiten' : 'Neue Location' }}</h2>
 
                 <form @submit.prevent="submit" class="space-y-4">
                     <div>
@@ -139,6 +179,10 @@ function destroy(location) {
                     <div>
                         <label class="block text-sm font-medium text-surface-700 mb-1">Beschreibung</label>
                         <textarea v-model="form.description" rows="3" class="w-full rounded-xl border-surface-300 focus:border-brand-500 focus:ring-1 focus:ring-brand-200"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-surface-700 mb-1">Banner Bild</label>
+                        <input type="file" @change="handleImageUpload" accept="image/*" class="w-full text-sm text-surface-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100" />
                     </div>
                     <div class="flex items-center gap-3 pt-2">
                         <input id="is_global" v-model="form.is_global" type="checkbox" class="rounded border-surface-300 text-brand-500 focus:ring-brand-200" />

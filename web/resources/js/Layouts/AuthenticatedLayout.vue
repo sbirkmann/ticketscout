@@ -21,8 +21,11 @@ const page = usePage();
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo class="block h-9 w-auto text-brand-600" />
+                                <Link :href="route('dashboard')" class="flex items-center gap-2">
+                                    <div class="font-display font-black text-2xl tracking-tighter text-surface-900">
+                                        TICKETSOUT<span class="text-brand-500">24</span>
+                                    </div>
+                                    <span class="bg-surface-900 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ml-1">Veranstalter</span>
                                 </Link>
                             </div>
 
@@ -33,6 +36,9 @@ const page = usePage();
                                 </NavLink>
                                 <NavLink :href="route('vendor.events.index')" :active="route().current('vendor.events.*')">
                                     Events
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.orders.index')" :active="route().current('vendor.orders.*')">
+                                    Bestellungen
                                 </NavLink>
                                 <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.invoices.index')" :active="route().current('vendor.invoices.index')">
                                     Rechnungen
@@ -136,6 +142,9 @@ const page = usePage();
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('vendor.events.index')" :active="route().current('vendor.events.*')">
                             Events
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.orders.index')" :active="route().current('vendor.orders.*')">
+                            Bestellungen
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.invoices.index')" :active="route().current('vendor.invoices.index')">
                             Rechnungen

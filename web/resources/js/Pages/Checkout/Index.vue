@@ -241,7 +241,7 @@ import { nextTick } from 'vue';
                         </div>
 
                         <!-- Voucher -->
-                        <div class="bg-white rounded-2xl border border-surface-200 shadow-sm p-5">
+                        <div class="mt-6 bg-white rounded-2xl border border-surface-200 shadow-sm p-5">
                             <p class="font-bold text-surface-800 mb-3">Gutschein einlösen</p>
                             <div class="flex gap-3">
                                 <input v-model="voucherInput" type="text" placeholder="Gutschein-Code" class="flex-1 rounded-xl border-surface-300 text-sm focus:ring-brand-400 focus:border-brand-400" />
@@ -251,7 +251,7 @@ import { nextTick } from 'vue';
                             <p v-if="voucherApplied" class="text-green-600 text-xs mt-2 font-bold">✓ Gutschein aktiv – {{ formatCurrency(voucherDiscount) }} werden abgezogen.</p>
                         </div>
 
-                        <button @click="step = 2" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-2xl transition-colors shadow-md text-lg mt-2">
+                        <button @click="step = 2" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-2xl transition-colors shadow-md text-lg mt-6">
                             Weiter zu deinen Daten →
                         </button>
                     </div>

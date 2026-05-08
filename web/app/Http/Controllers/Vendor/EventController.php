@@ -58,6 +58,7 @@ class EventController extends Controller
             'tags' => 'nullable|string',
             'artist_ids' => 'nullable|array',
             'artist_ids.*' => 'exists:artists,id',
+            'show_remaining_tickets' => 'boolean',
         ]);
 
         $locationId = $validated['location_id'];
@@ -85,6 +86,7 @@ class EventController extends Controller
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'status' => $validated['status'],
+            'show_remaining_tickets' => $validated['show_remaining_tickets'] ?? true,
             'tags' => $validated['tags'] ? array_map('trim', explode(',', $validated['tags'])) : [],
         ]);
 
@@ -156,6 +158,7 @@ class EventController extends Controller
             'tags' => 'nullable|string',
             'artist_ids' => 'nullable|array',
             'artist_ids.*' => 'exists:artists,id',
+            'show_remaining_tickets' => 'boolean',
         ]);
 
         $locationId = $validated['location_id'];
@@ -181,6 +184,7 @@ class EventController extends Controller
         $event->start_date = $validated['start_date'];
         $event->end_date = $validated['end_date'];
         $event->status = $validated['status'];
+        $event->show_remaining_tickets = $validated['show_remaining_tickets'] ?? true;
         $event->tags = $validated['tags'] ? array_map('trim', explode(',', $validated['tags'])) : [];
 
         if ($request->hasFile('image')) {

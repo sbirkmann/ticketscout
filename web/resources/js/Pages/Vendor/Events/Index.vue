@@ -73,9 +73,14 @@ function formatDate(dateString) {
                                     </svg>
                                     {{ formatDate(event.start_date) }}
                                 </div>
-                                <Link :href="route('vendor.events.show', event.id)" class="text-brand-600 hover:text-brand-800 font-bold text-sm bg-brand-50 px-3 py-1.5 rounded-lg">
-                                    Verwalten →
-                                </Link>
+                                <div class="flex gap-2">
+                                    <Link v-if="event.seating_plan_id" :href="route('vendor.events.seating', event.id)" class="text-indigo-600 hover:text-indigo-800 font-bold text-sm bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                                        Saalplan
+                                    </Link>
+                                    <Link :href="route('vendor.events.show', event.id)" class="text-brand-600 hover:text-brand-800 font-bold text-sm bg-brand-50 px-3 py-1.5 rounded-lg transition-colors">
+                                        Verwalten →
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
