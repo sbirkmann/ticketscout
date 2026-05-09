@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Event extends Model
 {
     protected $guarded = [];
+    
+    protected $appends = ['is_favorited'];
 
     protected function casts(): array
     {
@@ -64,5 +66,35 @@ class Event extends Model
         return $this->belongsToMany(Artist::class, 'artist_event')
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    public function waitlists()
+    {
+        return $this->hasMany(Waitlist::class);
+    }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function favoritedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'favorites', 'event_id', 'user_id')->withTimestamps();
+    }
+
+    public function promoCodes()
+    {
+        return $this->hasMany(PromoCode::class);
+    }
+
+    public function getIsFavoritedAttribute()
+    {
+        if (!auth()->check())
+            return false;
+
+        // This is not optimized for N+1 if loading many events. 
+        // For N+1 prevention we should eager load a constrained relation or use `withExists`
+        return $this->favorites()->where('user_id', auth()->id())->exists();
     }
 }

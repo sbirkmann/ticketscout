@@ -45,6 +45,7 @@ const form = useForm({
     billing_phone: '',
     agb_accepted: false,
     voucher_code: '',
+    promo_code: '',
     cart: props.cartItems,
     subtotal: props.subtotal,
     tax_rate: props.taxRate,
@@ -63,6 +64,34 @@ const needsAttendeeNames = computed(() =>
     props.cartItems.some(i => i.type === 'ticket' && i.requires_attendee_name)
 );
 
+// Promo Code
+const promoApplied = ref(null);
+const promoInput = ref('');
+const promoError = ref('');
+
+async function applyPromo() {
+    promoError.value = '';
+    try {
+        const res = await fetch(`/checkout/${props.event.slug}/validate-promo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
+            body: JSON.stringify({ promo_code: promoInput.value, subtotal: props.subtotal })
+        });
+        const data = await res.json();
+        if (data.valid) {
+            promoApplied.value = data;
+            form.promo_code = data.code;
+        } else {
+            promoError.value = data.message;
+        }
+    } catch { promoError.value = 'Fehler beim Prüfen des Rabattcodes.'; }
+}
+
+const promoDiscount = computed(() => {
+    if (!promoApplied.value) return 0;
+    return promoApplied.value.discount;
+});
+
 // Voucher
 const voucherApplied = ref(null);
 const voucherInput = ref('');
@@ -73,7 +102,7 @@ async function applyVoucher() {
     try {
         const res = await fetch('/api/voucher/check', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': page.props.csrfToken ?? document.querySelector('meta[name=csrf-token]')?.content },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content },
             body: JSON.stringify({ code: voucherInput.value })
         });
         const data = await res.json();
@@ -88,11 +117,11 @@ async function applyVoucher() {
 
 const voucherDiscount = computed(() => {
     if (!voucherApplied.value) return 0;
-    return Math.min(voucherApplied.value.balance, props.subtotal);
+    return Math.min(voucherApplied.value.balance, Math.max(0, props.subtotal - promoDiscount.value));
 });
 
 const totalAfterVoucher = computed(() =>
-    Math.max(0, props.subtotal - voucherDiscount.value)
+    Math.max(0, props.subtotal - promoDiscount.value - voucherDiscount.value)
 );
 
 function formatCurrency(val) {
@@ -240,15 +269,31 @@ import { nextTick } from 'vue';
                             </div>
                         </div>
 
-                        <!-- Voucher -->
-                        <div class="mt-6 bg-white rounded-2xl border border-surface-200 shadow-sm p-5">
-                            <p class="font-bold text-surface-800 mb-3">Gutschein einlösen</p>
-                            <div class="flex gap-3">
-                                <input v-model="voucherInput" type="text" placeholder="Gutschein-Code" class="flex-1 rounded-xl border-surface-300 text-sm focus:ring-brand-400 focus:border-brand-400" />
-                                <button @click="applyVoucher" class="bg-surface-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-surface-800 transition-colors">Einlösen</button>
+                        <!-- Discounts -->
+                        <div class="mt-6 bg-white rounded-2xl border border-surface-200 shadow-sm p-5 space-y-4">
+                            <!-- Promo Code -->
+                            <div>
+                                <p class="font-bold text-surface-800 mb-2">Rabattcode</p>
+                                <div class="flex gap-3">
+                                    <input v-model="promoInput" type="text" placeholder="z.B. SOMMER24" class="flex-1 rounded-xl border-surface-300 text-sm focus:ring-brand-400 focus:border-brand-400 uppercase" />
+                                    <button type="button" @click="applyPromo" class="bg-surface-100 text-surface-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-surface-200 transition-colors">Einlösen</button>
+                                </div>
+                                <p v-if="promoError" class="text-red-500 text-xs mt-2">{{ promoError }}</p>
+                                <p v-if="promoApplied" class="text-brand-600 text-xs mt-2 font-bold">✓ {{ promoApplied.message }} – {{ formatCurrency(promoDiscount) }} Rabatt.</p>
                             </div>
-                            <p v-if="voucherError" class="text-red-500 text-xs mt-2">{{ voucherError }}</p>
-                            <p v-if="voucherApplied" class="text-green-600 text-xs mt-2 font-bold">✓ Gutschein aktiv – {{ formatCurrency(voucherDiscount) }} werden abgezogen.</p>
+
+                            <div class="h-px bg-surface-100"></div>
+
+                            <!-- Value Voucher -->
+                            <div>
+                                <p class="font-bold text-surface-800 mb-2">Wert-Gutschein</p>
+                                <div class="flex gap-3">
+                                    <input v-model="voucherInput" type="text" placeholder="Gutscheincode (Geschenk)" class="flex-1 rounded-xl border-surface-300 text-sm focus:ring-brand-400 focus:border-brand-400" />
+                                    <button type="button" @click="applyVoucher" class="bg-surface-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-surface-800 transition-colors">Einlösen</button>
+                                </div>
+                                <p v-if="voucherError" class="text-red-500 text-xs mt-2">{{ voucherError }}</p>
+                                <p v-if="voucherApplied" class="text-green-600 text-xs mt-2 font-bold">✓ Gutschein aktiv – {{ formatCurrency(voucherDiscount) }} werden abgezogen.</p>
+                            </div>
                         </div>
 
                         <button @click="step = 2" class="w-full bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 rounded-2xl transition-colors shadow-md text-lg mt-6">
@@ -414,8 +459,12 @@ import { nextTick } from 'vue';
                                 <span>{{ formatCurrency(taxAmount) }}</span>
                             </div>
                             <div v-if="taxExempt" class="text-xs text-surface-500">Steuerbefreit gem. §19 UStG</div>
+                            <div v-if="promoDiscount > 0" class="flex justify-between text-brand-600 font-medium">
+                                <span>Rabattcode ({{ form.promo_code }})</span>
+                                <span>– {{ formatCurrency(promoDiscount) }}</span>
+                            </div>
                             <div v-if="voucherDiscount > 0" class="flex justify-between text-green-600 font-medium">
-                                <span>Gutschein</span>
+                                <span>Wert-Gutschein</span>
                                 <span>– {{ formatCurrency(voucherDiscount) }}</span>
                             </div>
                         </div>

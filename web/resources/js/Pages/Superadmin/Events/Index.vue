@@ -44,6 +44,7 @@ function destroy(event) {
                             <th class="text-left px-6 py-4 text-sm font-bold text-surface-700">Location</th>
                             <th class="text-left px-6 py-4 text-sm font-bold text-surface-700">Vendor</th>
                             <th class="text-center px-6 py-4 text-sm font-bold text-surface-700">Status</th>
+                            <th class="text-center px-6 py-4 text-sm font-bold text-surface-700">Warteliste</th>
                             <th class="text-right px-6 py-4 text-sm font-bold text-surface-700">Aktionen</th>
                         </tr>
                     </thead>
@@ -58,6 +59,10 @@ function destroy(event) {
                             <td class="px-6 py-4 text-center">
                                 <span v-if="evt.status === 'published'" class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">Veröffentlicht</span>
                                 <span v-else class="bg-surface-100 text-surface-700 text-xs font-bold px-2 py-1 rounded">{{ evt.status }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span v-if="evt.waitlists_count > 0" class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-full">{{ evt.waitlists_count }} Einträge</span>
+                                <span v-else class="text-surface-400 text-xs">-</span>
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-2">

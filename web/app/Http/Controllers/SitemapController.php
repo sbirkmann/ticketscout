@@ -15,10 +15,12 @@ class SitemapController extends Controller
         $locations = Location::where('is_global', true)->where('is_approved', true)->get();
         $artists = Artist::where('is_published', true)->get();
 
-        return response()->view('sitemap.index', [
+        $xmlContent = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . view('sitemap.index', [
             'events' => $events,
             'locations' => $locations,
             'artists' => $artists,
-        ])->header('Content-Type', 'text/xml');
+        ])->render();
+
+        return response($xmlContent)->header('Content-Type', 'text/xml');
     }
 }

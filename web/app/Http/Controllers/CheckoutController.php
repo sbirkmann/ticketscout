@@ -105,6 +105,7 @@ class CheckoutController extends Controller
             'guest_email'       => 'required_if:checkout_type,guest|email|nullable',
             'agb_accepted'      => 'required|accepted',
             'voucher_code'      => 'nullable|string',
+            'promo_code'        => 'nullable|string',
             'cart'              => 'required|array',
             'subtotal'          => 'required|numeric',
             'tax_rate'          => 'required|numeric',
@@ -116,6 +117,21 @@ class CheckoutController extends Controller
         $totalAmount = floatval($validated['subtotal']);
         $voucherUsed = 0;
         $voucherId   = null;
+        $promoDiscount = 0;
+        $promoId = null;
+
+        // Apply Promo Code first
+        if (!empty($validated['promo_code'])) {
+            $promoCodeObj = \App\Models\PromoCode::where('code', $validated['promo_code'])
+                ->where('vendor_id', $event->vendor_id)
+                ->first();
+
+            if ($promoCodeObj && $promoCodeObj->isValidForEvent($event->id)) {
+                $promoDiscount = round($promoCodeObj->calculateDiscount($totalAmount), 2);
+                $totalAmount = max(0, $totalAmount - $promoDiscount);
+                $promoId = $promoCodeObj->id;
+            }
+        }
 
         // Apply voucher if provided
         if (!empty($validated['voucher_code'])) {
@@ -135,10 +151,10 @@ class CheckoutController extends Controller
 
         $platformFee = round($totalAmount * 0.05, 2);
 
-        // If nothing left to pay after voucher
+        // If nothing left to pay after voucher/promo
         if ($totalAmount <= 0) {
             return $this->completeOrderWithoutPayment(
-                $event, $validated, $voucherId, $voucherUsed
+                $event, $validated, $voucherId, $voucherUsed, $promoId, $promoDiscount
             );
         }
 
@@ -155,6 +171,8 @@ class CheckoutController extends Controller
                 'billing_email'     => $validated['guest_email'] ?? auth()->user()?->email,
                 'voucher_id'        => $voucherId,
                 'voucher_amount'    => $voucherUsed,
+                'promo_id'          => $promoId,
+                'promo_amount'      => $promoDiscount,
             ],
         ];
 
@@ -174,9 +192,36 @@ class CheckoutController extends Controller
             'orderData'    => array_merge($validated, [
                 'voucher_id'     => $voucherId,
                 'voucher_amount' => $voucherUsed,
+                'promo_id'       => $promoId,
+                'promo_amount'   => $promoDiscount,
                 'total_charged'  => $totalAmount,
                 'platform_fee'   => $platformFee,
             ])
+        ]);
+    }
+
+    public function validatePromo(Request $request, Event $event)
+    {
+        $validated = $request->validate([
+            'promo_code' => 'required|string',
+            'subtotal'   => 'required|numeric'
+        ]);
+
+        $promo = \App\Models\PromoCode::where('code', $validated['promo_code'])
+            ->where('vendor_id', $event->vendor_id)
+            ->first();
+
+        if (!$promo || !$promo->isValidForEvent($event->id)) {
+            return response()->json(['valid' => false, 'message' => 'Gutscheincode ungültig oder abgelaufen.']);
+        }
+
+        $discount = round($promo->calculateDiscount($validated['subtotal']), 2);
+
+        return response()->json([
+            'valid' => true,
+            'discount' => $discount,
+            'code' => $promo->code,
+            'message' => 'Gutschein erfolgreich angewendet!'
         ]);
     }
 
@@ -203,11 +248,13 @@ class CheckoutController extends Controller
         return redirect()->route('checkout.success')->with('order_id', $order->id);
     }
 
-    private function completeOrderWithoutPayment($event, $orderData, $voucherId, $voucherUsed)
+    private function completeOrderWithoutPayment($event, $orderData, $voucherId, $voucherUsed, $promoId, $promoDiscount)
     {
         $order = $this->createOrder($event, array_merge($orderData, [
             'voucher_id'     => $voucherId,
             'voucher_amount' => $voucherUsed,
+            'promo_id'       => $promoId,
+            'promo_amount'   => $promoDiscount,
             'total_charged'  => 0,
             'platform_fee'   => 0,
         ]), null);
@@ -235,6 +282,8 @@ class CheckoutController extends Controller
             'billing_country'     => $orderData['billing_country'] ?? 'DE',
             'billing_phone'       => $orderData['billing_phone'] ?? null,
             'total_amount'        => $subtotal,
+            'promo_code_id'       => $orderData['promo_id'] ?? null,
+            'promo_discount'      => $orderData['promo_amount'] ?? 0,
             'platform_fee'        => $platformFee,
             'tax_rate'            => $taxRate,
             'tax_amount'          => $taxAmount,
@@ -269,6 +318,14 @@ class CheckoutController extends Controller
                 $voucher->balance = max(0, $voucher->balance - $orderData['voucher_amount']);
                 if ($voucher->balance <= 0) $voucher->is_active = false;
                 $voucher->save();
+            }
+        }
+        
+        // Increase usage of promo code
+        if (!empty($orderData['promo_id'])) {
+            $promo = \App\Models\PromoCode::find($orderData['promo_id']);
+            if ($promo) {
+                $promo->increment('current_uses');
             }
         }
 

@@ -23,9 +23,15 @@ class AddonController extends Controller
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
             'quantity'    => 'nullable|integer|min:1',
+            'ticket_categories' => 'nullable|array',
+            'ticket_categories.*' => 'exists:ticket_categories,id',
         ]);
 
-        $event->addons()->create($validated);
+        $addon = $event->addons()->create(\Illuminate\Support\Arr::except($validated, ['ticket_categories']));
+
+        if (isset($validated['ticket_categories'])) {
+            $addon->ticketCategories()->sync($validated['ticket_categories']);
+        }
 
         return back()->with('success', 'Add-on erstellt.');
     }
@@ -39,9 +45,17 @@ class AddonController extends Controller
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
             'quantity'    => 'nullable|integer|min:1',
+            'ticket_categories' => 'nullable|array',
+            'ticket_categories.*' => 'exists:ticket_categories,id',
         ]);
 
-        $addon->update($validated);
+        $addon->update(\Illuminate\Support\Arr::except($validated, ['ticket_categories']));
+
+        if (isset($validated['ticket_categories'])) {
+            $addon->ticketCategories()->sync($validated['ticket_categories']);
+        } else {
+            $addon->ticketCategories()->sync([]);
+        }
 
         return back()->with('success', 'Add-on aktualisiert.');
     }
@@ -49,6 +63,7 @@ class AddonController extends Controller
     public function destroy(Event $event, Addon $addon)
     {
         $this->authorizeEvent($event);
+        $addon->ticketCategories()->detach();
         $addon->delete();
         return back()->with('success', 'Add-on gelöscht.');
     }

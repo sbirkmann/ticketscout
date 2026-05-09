@@ -40,6 +40,18 @@ const page = usePage();
                                 <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.orders.index')" :active="route().current('vendor.orders.*')">
                                     Bestellungen
                                 </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.promo-codes.index')" :active="route().current('vendor.promo-codes.*')">
+                                    Gutscheine
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.crm.index')" :active="route().current('vendor.crm.*')">
+                                    Kunden-Mails
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.checkins.index')" :active="route().current('vendor.checkins.*')">
+                                    Check-in Tracker
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.staff.index')" :active="route().current('vendor.staff.*')">
+                                    Team & Scanner
+                                </NavLink>
                                 <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.invoices.index')" :active="route().current('vendor.invoices.index')">
                                     Rechnungen
                                 </NavLink>
@@ -145,6 +157,18 @@ const page = usePage();
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.orders.index')" :active="route().current('vendor.orders.*')">
                             Bestellungen
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.promo-codes.index')" :active="route().current('vendor.promo-codes.*')">
+                            Gutscheine
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.crm.index')" :active="route().current('vendor.crm.*')">
+                            Kunden-Mails
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.checkins.index')" :active="route().current('vendor.checkins.*')">
+                            Check-in Tracker
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.staff.index')" :active="route().current('vendor.staff.*')">
+                            Team & Scanner
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.invoices.index')" :active="route().current('vendor.invoices.index')">
                             Rechnungen

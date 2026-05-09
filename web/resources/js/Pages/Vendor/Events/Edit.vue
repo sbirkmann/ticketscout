@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import MultiSelect from '@/Components/MultiSelect.vue';
+import axios from 'axios';
 
 const props = defineProps({
     event: Object,
@@ -63,6 +64,26 @@ const destroy = () => {
     if (confirm('Bist du sicher, dass du dieses Event löschen möchtest?')) {
         form.delete(route('vendor.events.destroy', props.event.id));
     }
+};
+
+const generatingAi = ref(false);
+
+const generateDescription = () => {
+    if (!form.title) {
+        alert('Bitte gib zuerst einen Titel ein.');
+        return;
+    }
+    generatingAi.value = true;
+    axios.post(route('vendor.events.ai-description'), {
+        title: form.title,
+        tags: form.tags
+    }).then(res => {
+        form.description = res.data.description;
+    }).catch(err => {
+        alert('Fehler bei der KI-Generierung.');
+    }).finally(() => {
+        generatingAi.value = false;
+    });
 };
 </script>
 
@@ -205,7 +226,13 @@ const destroy = () => {
                                     <MultiSelect v-model="form.artist_ids" :options="artists" placeholder="Künstler auswählen..." />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-surface-700 mb-1">Beschreibung</label>
+                                    <div class="flex justify-between items-end mb-1">
+                                        <label class="block text-sm font-medium text-surface-700">Beschreibung</label>
+                                        <button type="button" @click="generateDescription" :disabled="generatingAi" class="text-xs flex items-center gap-1 bg-purple-100 text-purple-700 hover:bg-purple-200 px-3 py-1.5 rounded-lg font-bold transition-colors disabled:opacity-50">
+                                            <span v-if="generatingAi">Generiert...</span>
+                                            <span v-else>✨ Mit KI generieren</span>
+                                        </button>
+                                    </div>
                                     <textarea v-model="form.description" rows="5" class="w-full rounded-xl border-surface-300 focus:ring-brand-500 focus:border-brand-500" placeholder="Beschreibe dein Event..."></textarea>
                                 </div>
                                 <div>

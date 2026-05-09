@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const props = defineProps({
     events: Array
@@ -12,6 +13,33 @@ function formatDate(dateString) {
         hour: '2-digit', minute: '2-digit'
     });
 }
+
+const selectedEvents = ref([]);
+const bulkAction = ref('');
+
+const toggleAll = (event) => {
+    if (event.target.checked) {
+        selectedEvents.value = props.events.map(e => e.id);
+    } else {
+        selectedEvents.value = [];
+    }
+};
+
+const executeBulkAction = () => {
+    if (!bulkAction.value || selectedEvents.value.length === 0) return;
+    
+    if (confirm(`Möchtest du wirklich ${selectedEvents.value.length} Events ${bulkAction.value === 'delete' ? 'löschen' : 'aktualisieren'}?`)) {
+        router.post(route('vendor.events.bulk'), {
+            action: bulkAction.value,
+            event_ids: selectedEvents.value
+        }, {
+            onSuccess: () => {
+                selectedEvents.value = [];
+                bulkAction.value = '';
+            }
+        });
+    }
+};
 </script>
 
 <template>
@@ -19,14 +47,28 @@ function formatDate(dateString) {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center flex-wrap gap-4">
                 <h2 class="font-semibold text-2xl text-surface-900 leading-tight font-display">Meine Events</h2>
-                <Link :href="route('vendor.events.create')" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-                    </svg>
-                    Event anlegen
-                </Link>
+                
+                <div class="flex items-center gap-4">
+                    <div v-if="selectedEvents.length > 0" class="flex items-center gap-2 bg-surface-100 px-4 py-2 rounded-full">
+                        <span class="text-sm font-bold text-surface-600">{{ selectedEvents.length }} markiert</span>
+                        <select v-model="bulkAction" class="text-sm border-surface-300 rounded-lg focus:ring-brand-400 py-1 pl-3 pr-8">
+                            <option value="">Aktion wählen...</option>
+                            <option value="publish">Veröffentlichen</option>
+                            <option value="draft">Als Entwurf markieren</option>
+                            <option value="delete">Löschen</option>
+                        </select>
+                        <button @click="executeBulkAction" class="bg-surface-800 text-white px-3 py-1 rounded-lg text-sm font-bold hover:bg-black transition-colors">Ausführen</button>
+                    </div>
+
+                    <Link :href="route('vendor.events.create')" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-full font-medium transition-all shadow-md flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Event anlegen
+                    </Link>
+                </div>
             </div>
         </template>
 
@@ -46,10 +88,20 @@ function formatDate(dateString) {
                     </Link>
                 </div>
 
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div v-for="event in events" :key="event.id" class="bg-white rounded-3xl shadow-sm border border-surface-200 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col">
-                        <div class="h-48 bg-surface-200 relative overflow-hidden">
-                            <img v-if="event.image_path" :src="`/storage/${event.image_path}`" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div v-else>
+                    <div class="mb-4 flex items-center gap-2">
+                        <input type="checkbox" @change="toggleAll" :checked="selectedEvents.length === events.length && events.length > 0" class="rounded border-surface-300 text-brand-500 focus:ring-brand-500 w-5 h-5 cursor-pointer">
+                        <span class="text-sm font-medium text-surface-600">Alle auswählen</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div v-for="event in events" :key="event.id" class="bg-white rounded-3xl shadow-sm border border-surface-200 overflow-hidden hover:shadow-md transition-all duration-300 group flex flex-col relative" :class="{'ring-2 ring-brand-500': selectedEvents.includes(event.id)}">
+                            <div class="absolute top-4 left-4 z-10 bg-white/80 backdrop-blur rounded p-1 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity" :class="{'opacity-100': selectedEvents.includes(event.id)}">
+                                <input type="checkbox" :value="event.id" v-model="selectedEvents" class="rounded border-surface-300 text-brand-500 focus:ring-brand-500 w-5 h-5 cursor-pointer">
+                            </div>
+                            
+                            <div class="h-48 bg-surface-200 relative overflow-hidden">
+                                <img v-if="event.image_path" :src="`/storage/${event.image_path}`" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                             <div v-else class="w-full h-full flex items-center justify-center text-surface-400">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -83,6 +135,7 @@ function formatDate(dateString) {
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
 

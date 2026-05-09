@@ -12,6 +12,7 @@ class EventController extends Controller
     public function index()
     {
         $events = Event::with(['vendor', 'location'])
+            ->withCount('waitlists')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 

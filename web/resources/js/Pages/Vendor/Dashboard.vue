@@ -2,16 +2,25 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
+import { computed } from 'vue';
+
 const props = defineProps({
     stripeConnected: Boolean,
     recentEvents: Array,
     recentOrders: Array,
     stats: Object,
+    chartData: Array,
 });
 
 function formatMoney(amount) {
     return parseFloat(amount || 0).toFixed(2).replace('.', ',') + ' €';
 }
+
+const maxRevenue = computed(() => {
+    if (!props.chartData || props.chartData.length === 0) return 100;
+    const max = Math.max(...props.chartData.map(d => d.revenue));
+    return max > 0 ? max : 100; // default 100 to prevent 0 division
+});
 </script>
 
 <template>
@@ -39,7 +48,7 @@ function formatMoney(amount) {
                                 <p>Um Auszahlungen aus Ticketverkäufen zu erhalten, musst du dein Stripe Connect-Konto einrichten.</p>
                             </div>
                             <div class="mt-4">
-                                <Link :href="route('vendor.settings.index')" class="text-sm font-bold text-yellow-800 hover:text-yellow-900 bg-yellow-100 px-4 py-2 rounded-lg">Jetzt einrichten &rarr;</Link>
+                                <Link href="#" class="text-sm font-bold text-yellow-800 hover:text-yellow-900 bg-yellow-100 px-4 py-2 rounded-lg">Jetzt einrichten &rarr;</Link>
                             </div>
                         </div>
                     </div>
@@ -61,6 +70,27 @@ function formatMoney(amount) {
                     </div>
                 </div>
 
+                <!-- Revenue Chart -->
+                <div class="bg-white rounded-3xl p-8 border border-surface-200 shadow-sm">
+                    <h3 class="font-display font-bold text-xl mb-6">Umsatz der letzten 30 Tage</h3>
+                    <div class="h-64 flex items-end gap-1 md:gap-2">
+                        <div v-for="(day, index) in chartData" :key="index" class="flex-1 flex flex-col items-center group relative">
+                            <!-- Tooltip -->
+                            <div class="opacity-0 group-hover:opacity-100 absolute -top-12 bg-surface-900 text-white text-xs py-1 px-2 rounded pointer-events-none transition-opacity whitespace-nowrap z-10">
+                                {{ day.date }}: {{ formatMoney(day.revenue) }}
+                            </div>
+                            <!-- Bar -->
+                            <div class="w-full bg-brand-100 hover:bg-brand-500 rounded-t-sm transition-all duration-300 relative"
+                                 :style="`height: ${Math.max((day.revenue / maxRevenue) * 100, 2)}%`">
+                            </div>
+                            <!-- Label (show every 5th day on mobile, or just hide on very small screens) -->
+                            <div class="text-[10px] text-surface-400 mt-2 rotate-45 md:rotate-0 origin-left hidden md:block" v-if="index % 3 === 0">
+                                {{ day.date }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Quick Actions -->
                 <div class="bg-surface-900 rounded-3xl p-8 text-white shadow-md relative overflow-hidden">
                     <div class="absolute right-0 top-0 opacity-10">
@@ -71,7 +101,7 @@ function formatMoney(amount) {
                         <Link :href="route('vendor.events.create')" class="bg-brand-500 hover:bg-brand-400 text-white px-6 py-3 rounded-xl font-bold transition-colors shadow-sm">
                             + Neues Event anlegen
                         </Link>
-                        <Link :href="route('vendor.settings.index')" class="bg-surface-800 hover:bg-surface-700 text-white px-6 py-3 rounded-xl font-bold transition-colors">
+                        <Link href="#" class="bg-surface-800 hover:bg-surface-700 text-white px-6 py-3 rounded-xl font-bold transition-colors">
                             ⚙️ Rechnungen & Steuern konfigurieren
                         </Link>
                     </div>

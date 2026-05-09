@@ -29,12 +29,22 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $globalSettings = cache()->remember('global_settings', 60, function() {
+            return \App\Models\GlobalSetting::pluck('value', 'key')->toArray();
+        });
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
-                'roles' => $request->user() ? $request->user()->roles->pluck('name') : [],
+                'roles' => $request->user() ? $request->user()->getRoleNames() : [],
+                'is_impersonating' => session()->has('impersonator_id'),
             ],
+            'globalSettings' => $globalSettings,
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ]
         ];
     }
 }

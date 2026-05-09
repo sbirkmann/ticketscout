@@ -31,10 +31,13 @@ class DashboardController extends Controller
             'active_vendors' => \App\Models\User::role('vendor')->count(),
         ];
 
+        $vendors = \App\Models\User::role('vendor')->select('id', 'name', 'email')->get();
+
         return Inertia::render('Admin/Dashboard', [
             'pendingEvents' => $pendingEvents,
             'pendingLocations' => $pendingLocations,
             'stats' => $stats,
+            'vendors' => $vendors,
         ]);
     }
 

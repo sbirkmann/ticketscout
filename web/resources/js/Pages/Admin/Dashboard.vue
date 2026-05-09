@@ -6,6 +6,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
         pendingEvents: Array,
         pendingLocations: Array,
         stats: Object,
+        vendors: Array,
     });
     
     const form = useForm({});
@@ -141,6 +142,27 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
                                     Freigeben
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Masquerading / Vendors -->
+                <div class="bg-white rounded-3xl p-8 border border-surface-200 shadow-sm">
+                    <h3 class="text-xl font-bold font-display text-surface-900 mb-6">Support & Verwaltung: Veranstalter</h3>
+                    
+                    <div v-if="!vendors || vendors.length === 0" class="text-surface-500 py-8 text-center bg-surface-50 rounded-2xl border border-surface-100">
+                        Keine Veranstalter registriert.
+                    </div>
+                    
+                    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div v-for="vendor in vendors" :key="vendor.id" class="p-4 border border-surface-200 rounded-2xl flex flex-col justify-between hover:border-brand-300 transition-colors bg-surface-50">
+                            <div class="mb-4">
+                                <h4 class="font-bold text-surface-900">{{ vendor.name }}</h4>
+                                <p class="text-sm text-surface-500 truncate">{{ vendor.email }}</p>
+                            </div>
+                            <Link :href="route('impersonate', vendor.id)" method="post" as="button" class="w-full py-2 text-sm font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors text-center">
+                                Login als {{ vendor.name }}
+                            </Link>
                         </div>
                     </div>
                 </div>

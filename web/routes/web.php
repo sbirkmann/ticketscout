@@ -9,16 +9,23 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 
-Route::get('/', [FrontendController::class, 'index'])->name('home');
+Route::get('/', [\App\Http\Controllers\FrontendController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+Route::get('/events', [\App\Http\Controllers\FrontendController::class, 'events'])->name('events.index');
+Route::get('/events/{slug}', [\App\Http\Controllers\FrontendController::class, 'showEvent'])->name('event.show');
 Route::get('/locations', [FrontendController::class, 'locations'])->name('locations.index');
 Route::get('/location/{slug}', [FrontendController::class, 'showLocation'])->name('locations.show');
+Route::get('/orte', [FrontendController::class, 'cities'])->name('cities.index');
+Route::get('/ort/{slug}', [FrontendController::class, 'showCity'])->name('cities.show');
 Route::get('/category/{slug}', [FrontendController::class, 'showCategory'])->name('categories.show');
 Route::get('/artists', [FrontendController::class, 'artists'])->name('artists.index');
 Route::get('/artist/{slug}', [FrontendController::class, 'showArtist'])->name('artists.show');
 Route::get('/event/{slug}', [FrontendController::class, 'showEvent'])->name('event.show');
+Route::post('/event/{event}/waitlist', [\App\Http\Controllers\WaitlistController::class, 'store'])->name('event.waitlist');
+Route::get('/event/{slug}/ics', [FrontendController::class, 'downloadIcs'])->name('event.ics');
 
 Route::get('/checkout/{event:slug}', [CheckoutController::class, 'index'])->name('checkout.index');
+Route::post('/checkout/{event:slug}/validate-promo', [CheckoutController::class, 'validatePromo'])->name('checkout.validate-promo');
 Route::post('/checkout/{event:slug}', [CheckoutController::class, 'process'])->name('checkout.process');
 Route::get('/checkout/{event}/complete', [\App\Http\Controllers\CheckoutController::class, 'complete'])->name('checkout.complete');
 Route::get('/checkout/success', function () {
@@ -72,7 +79,27 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::get('/orders', [\App\Http\Controllers\Superadmin\OrderController::class, 'index'])->name('orders.index');
 
     // Settings
-    Route::get('/settings', [\App\Http\Controllers\Superadmin\SettingController::class, 'index'])->name('settings.index');});
+    Route::get('/settings', [\App\Http\Controllers\Superadmin\SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [\App\Http\Controllers\Superadmin\SettingController::class, 'store'])->name('settings.store');
+    
+    // System Health
+    Route::get('/health', [\App\Http\Controllers\Superadmin\HealthController::class, 'index'])->name('health.index');
+    
+    // Impersonation (Superadmin logs in as User)
+    Route::post('/impersonate/{user}', [\App\Http\Controllers\Superadmin\ImpersonationController::class, 'impersonate'])->name('impersonate');
+    
+    // Seating Plans
+    Route::get('/seating-plans', [\App\Http\Controllers\Superadmin\SeatingPlanController::class, 'index'])->name('seating-plans.index');
+    Route::post('/seating-plans', [\App\Http\Controllers\Superadmin\SeatingPlanController::class, 'store'])->name('seating-plans.store');
+    Route::post('/seating-plans/{seatingPlan}', [\App\Http\Controllers\Superadmin\SeatingPlanController::class, 'update'])->name('seating-plans.update');
+    Route::delete('/seating-plans/{seatingPlan}', [\App\Http\Controllers\Superadmin\SeatingPlanController::class, 'destroy'])->name('seating-plans.destroy');
+
+    // Cities (Orte)
+    Route::get('/cities', [\App\Http\Controllers\Superadmin\CityController::class, 'index'])->name('cities.index');
+    Route::post('/cities', [\App\Http\Controllers\Superadmin\CityController::class, 'store'])->name('cities.store');
+    Route::post('/cities/{city}', [\App\Http\Controllers\Superadmin\CityController::class, 'update'])->name('cities.update');
+    Route::delete('/cities/{city}', [\App\Http\Controllers\Superadmin\CityController::class, 'destroy'])->name('cities.destroy');
+});
 
 Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Vendor\DashboardController::class, 'index'])->name('dashboard');
@@ -84,9 +111,11 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     Route::resource('locations.seating-plans', \App\Http\Controllers\Vendor\SeatingPlanController::class);
 
     // Event Management
+    Route::post('events/ai-description', [\App\Http\Controllers\Vendor\EventController::class, 'generateAiDescription'])->name('events.ai-description');
     Route::post('events/{event}/duplicate', [\App\Http\Controllers\Vendor\EventController::class, 'duplicate'])->name('events.duplicate');
     Route::get('events/{event}/seating', [\App\Http\Controllers\Vendor\EventController::class, 'seating'])->name('events.seating');
     Route::put('events/{event}/seating', [\App\Http\Controllers\Vendor\EventController::class, 'updateSeating'])->name('events.seating.update');
+    Route::post('/events/bulk', [\App\Http\Controllers\Vendor\EventController::class, 'bulk'])->name('events.bulk');
     Route::resource('events', \App\Http\Controllers\Vendor\EventController::class)->names('events');
 
     // Settings & Onboarding
@@ -111,6 +140,24 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     Route::put('/events/{event}/ticket-categories/{category}', [\App\Http\Controllers\Vendor\TicketCategoryController::class, 'update'])->name('events.ticket-categories.update');
     Route::delete('/events/{event}/ticket-categories/{category}', [\App\Http\Controllers\Vendor\TicketCategoryController::class, 'destroy'])->name('events.ticket-categories.destroy');
     Route::patch('/events/{event}/ticket-categories/{category}/toggle-active', [\App\Http\Controllers\Vendor\TicketCategoryController::class, 'toggleActive'])->name('events.ticket-categories.toggle-active');
+
+    // CRM / Newsletter
+    Route::get('/crm', [\App\Http\Controllers\Vendor\CRMController::class, 'index'])->name('crm.index');
+    Route::post('/crm/send', [\App\Http\Controllers\Vendor\CRMController::class, 'send'])->name('crm.send');
+
+    // Echtzeit Check-in Tracker
+    Route::get('/checkins', [\App\Http\Controllers\Vendor\CheckinController::class, 'index'])->name('checkins.index');
+
+    // Promo Codes
+    Route::resource('promo-codes', \App\Http\Controllers\Vendor\PromoCodeController::class)->except(['show']);
+    
+    // Staff / Scanner Accounts
+    Route::resource('staff', \App\Http\Controllers\Vendor\StaffController::class)->only(['index', 'store', 'destroy']);
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::post('/events/{event}/favorite', [\App\Http\Controllers\Customer\FavoriteController::class, 'toggle'])->name('events.favorite');
+    Route::get('/favorites', [\App\Http\Controllers\Customer\FavoriteController::class, 'index'])->name('favorites.index');
 });
 
 Route::middleware(['auth', 'role:vendor'])->group(function () {
@@ -128,6 +175,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Impersonation leave
+    Route::post('/impersonate/leave', [\App\Http\Controllers\Superadmin\ImpersonationController::class, 'leave'])->name('impersonate.leave');
 });
 
 require __DIR__.'/auth.php';

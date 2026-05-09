@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { defineProps } from 'vue';
 import Navbar from '@/Components/Navbar.vue';
+import EventCard from '@/Components/EventCard.vue';
 
 const props = defineProps({
     canLogin: Boolean,
@@ -68,32 +69,7 @@ const props = defineProps({
 
             <div v-if="events && events.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Event Card -->
-                <Link v-for="event in events" :key="event.id" :href="route('event.show', event.slug)" class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-glass border border-surface-200 hover:border-brand-300 transition-all duration-300 flex flex-col">
-                    <div class="relative h-48 overflow-hidden bg-surface-200">
-                        <img v-if="event.image_path" :src="`/storage/${event.image_path}`" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :alt="event.title" />
-                        <div v-else class="w-full h-full flex items-center justify-center text-surface-400">
-                            Kein Bild
-                        </div>
-                        <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-md text-xs font-bold text-surface-900 shadow-sm flex items-center gap-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-brand-500" viewBox="0 0 20 20" fill="currentColor">
-                              <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd" />
-                            </svg>
-                            {{ new Date(event.start_date).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' }) }}
-                        </div>
-                    </div>
-                    <div class="p-5 flex-1 flex flex-col">
-                        <h3 class="font-bold text-lg text-surface-900 mb-2 leading-tight group-hover:text-brand-600 transition-colors line-clamp-2">{{ event.title }}</h3>
-                        <p class="text-surface-500 text-sm mb-4 flex-1 line-clamp-2">{{ event.description || 'Sichere dir jetzt deine Tickets.' }}</p>
-                        
-                        <div class="flex items-center text-surface-600 text-xs font-medium mt-auto pt-4 border-t border-surface-100">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                            {{ event.location ? event.location.city : 'Ort noch unbekannt' }}
-                        </div>
-                    </div>
-                </Link>
+                <EventCard v-for="event in events" :key="event.id" :event="event" />
             </div>
             <div v-else class="text-center py-16 bg-white rounded-2xl border border-surface-200">
                 <p class="text-surface-500 text-lg">Aktuell keine Events verfügbar. Schau später wieder vorbei!</p>

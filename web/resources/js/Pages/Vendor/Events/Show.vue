@@ -7,7 +7,7 @@ const props = defineProps({
     event: Object
 });
 
-const activeTab = ref('tickets'); // 'tickets', 'addons'
+const activeTab = ref('tickets'); // 'tickets', 'addons', 'waitlist'
 
 // --- Ticket Form ---
 const ticketForm = useForm({
@@ -61,6 +61,7 @@ const addonForm = useForm({
     description: '',
     price: '',
     quantity: '',
+    ticket_categories: [], // Array of ticket category IDs
 });
 const editingAddon = ref(null);
 
@@ -82,6 +83,7 @@ function editAddon(addon) {
     addonForm.description = addon.description;
     addonForm.price = addon.price;
     addonForm.quantity = addon.quantity;
+    addonForm.ticket_categories = addon.ticket_categories ? addon.ticket_categories.map(c => c.id) : [];
 }
 
 function deleteAddon(id) {
@@ -158,6 +160,9 @@ function resetAddonForm() {
                         </button>
                         <button @click="activeTab = 'addons'" :class="activeTab === 'addons' ? 'border-b-2 border-brand-500 text-brand-600 font-bold' : 'text-surface-500 hover:text-surface-700 font-medium'" class="flex-1 py-4 text-center transition-colors">
                             Upgrades & Add-ons
+                        </button>
+                        <button @click="activeTab = 'waitlist'" :class="activeTab === 'waitlist' ? 'border-b-2 border-brand-500 text-brand-600 font-bold' : 'text-surface-500 hover:text-surface-700 font-medium'" class="flex-1 py-4 text-center transition-colors">
+                            Warteliste <span v-if="event.waitlists?.length" class="ml-1 bg-surface-200 text-surface-700 px-2 py-0.5 rounded-full text-xs">{{ event.waitlists.length }}</span>
                         </button>
                     </div>
 
@@ -270,6 +275,14 @@ function resetAddonForm() {
                                                 <label class="block text-sm font-medium text-surface-700 mb-1">Anzahl (optional)</label>
                                                 <input v-model="addonForm.quantity" type="number" class="w-full rounded-xl border-surface-300 text-sm focus:ring-brand-500">
                                             </div>
+                                            <div v-if="event.ticket_categories && event.ticket_categories.length" class="space-y-2 pt-2 border-t border-surface-200">
+                                                <label class="block text-sm font-medium text-surface-700 mb-2">An Ticket-Kategorie binden (optional)</label>
+                                                <p class="text-xs text-surface-500 mb-2">Wenn keine Kategorie gewählt ist, kann jeder das Add-on kaufen. Andernfalls nur bei Wahl der markierten Kategorien.</p>
+                                                <div v-for="cat in event.ticket_categories" :key="cat.id" class="flex items-center gap-2">
+                                                    <input type="checkbox" :id="'addon-cat-' + cat.id" :value="cat.id" v-model="addonForm.ticket_categories" class="rounded border-surface-300 text-brand-500 focus:ring-brand-500">
+                                                    <label :for="'addon-cat-' + cat.id" class="text-sm text-surface-700 cursor-pointer">{{ cat.name }}</label>
+                                                </div>
+                                            </div>
                                             <div class="pt-4 flex gap-2">
                                                 <button v-if="editingAddon" type="button" @click="resetAddonForm" class="flex-1 bg-surface-200 hover:bg-surface-300 text-surface-800 py-2 rounded-xl text-sm font-bold transition-colors">Abbrechen</button>
                                                 <button type="submit" :disabled="addonForm.processing" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white py-2 rounded-xl text-sm font-bold transition-colors shadow-sm">Speichern</button>
@@ -277,6 +290,45 @@ function resetAddonForm() {
                                         </form>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- WAITLIST TAB -->
+                        <div v-if="activeTab === 'waitlist'">
+                            <div class="max-w-4xl mx-auto">
+                                <h3 class="text-lg font-bold text-surface-900 mb-4">Warteliste</h3>
+                                <p class="text-surface-600 text-sm mb-6">Hier siehst du alle Personen, die sich für die Warteliste eingetragen haben, weil das Event (oder eine Kategorie) ausverkauft war.</p>
+
+                                <div v-if="event.waitlists && event.waitlists.length" class="bg-white border border-surface-200 rounded-2xl overflow-hidden shadow-sm">
+                                    <table class="w-full text-left text-sm whitespace-nowrap">
+                                        <thead class="bg-surface-50 text-surface-500 border-b border-surface-200">
+                                            <tr>
+                                                <th class="px-6 py-4 font-bold">Datum</th>
+                                                <th class="px-6 py-4 font-bold">Name</th>
+                                                <th class="px-6 py-4 font-bold">E-Mail</th>
+                                                <th class="px-6 py-4 font-bold">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-surface-100">
+                                            <tr v-for="entry in event.waitlists" :key="entry.id" class="hover:bg-surface-50 transition-colors">
+                                                <td class="px-6 py-4 text-surface-500">{{ new Date(entry.created_at).toLocaleString('de-DE') }}</td>
+                                                <td class="px-6 py-4 font-bold text-surface-900">{{ entry.name }}</td>
+                                                <td class="px-6 py-4 text-surface-600"><a :href="'mailto:' + entry.email" class="text-brand-600 hover:underline">{{ entry.email }}</a></td>
+                                                <td class="px-6 py-4">
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium"
+                                                        :class="{
+                                                            'bg-yellow-100 text-yellow-800': entry.status === 'pending',
+                                                            'bg-blue-100 text-blue-800': entry.status === 'notified',
+                                                            'bg-green-100 text-green-800': entry.status === 'purchased'
+                                                        }">
+                                                        {{ entry.status === 'pending' ? 'Wartend' : (entry.status === 'notified' ? 'Benachrichtigt' : 'Gekauft') }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p v-else class="text-surface-500 italic bg-surface-50 p-6 rounded-2xl text-center border border-surface-100">Die Warteliste ist leer.</p>
                             </div>
                         </div>
 

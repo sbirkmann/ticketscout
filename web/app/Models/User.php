@@ -55,4 +55,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Invoice::class, 'vendor_id');
     }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function favoriteEvents()
+    {
+        return $this->belongsToMany(Event::class, 'favorites', 'user_id', 'event_id')->withTimestamps();
+    }
+
+    public function promoCodes()
+    {
+        return $this->hasMany(PromoCode::class, 'vendor_id');
+    }
 }

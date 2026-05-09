@@ -24,10 +24,32 @@ function closeDropdown() {
 
 // First name for display
 const firstName = computed(() => user.value?.name?.split(' ')[0] ?? 'Konto');
+
+const searchQuery = ref('');
+function performSearch() {
+    if (searchQuery.value.trim()) {
+        router.get(route('events.index'), { search: searchQuery.value });
+    }
+}
 </script>
 
 <template>
-    <nav class="bg-white border-b border-surface-200 sticky top-0 z-50 shadow-sm">
+    <div>
+        <!-- Impersonation Banner -->
+        <div v-if="$page.props.auth?.is_impersonating" class="bg-indigo-600 text-white px-4 py-2 flex items-center justify-center gap-4 text-sm font-bold shadow-md z-50 relative">
+            <span>Du bist aktuell als {{ $page.props.auth.user.name }} (Vendor) eingeloggt.</span>
+            <Link :href="route('impersonate.leave')" method="post" as="button" class="bg-white text-indigo-600 px-3 py-1 rounded-full text-xs font-black hover:bg-indigo-50 transition-colors">
+                Zurück zum Superadmin
+            </Link>
+        </div>
+
+        <!-- Global Banner -->
+        <div v-if="$page.props.globalSettings?.banner_active === '1'" 
+             :class="`bg-${$page.props.globalSettings.banner_color || 'brand-500'} text-white px-4 py-2 text-center text-sm font-bold shadow-md relative z-40`">
+            {{ $page.props.globalSettings.banner_text }}
+        </div>
+
+        <nav class="bg-white border-b border-surface-200 sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center gap-8">
@@ -37,6 +59,7 @@ const firstName = computed(() => user.value?.name?.split(' ')[0] ?? 'Konto');
                         </div>
                     </Link>
                     <div class="hidden lg:flex items-center gap-6 ml-4 font-medium text-surface-600">
+                        <Link :href="route('events.index')" class="hover:text-brand-600 transition-colors">Events</Link>
                         <Link :href="route('locations.index')" class="hover:text-brand-600 transition-colors">Locations</Link>
                         <Link :href="route('artists.index')" class="hover:text-brand-600 transition-colors">Künstler</Link>
                     </div>
@@ -48,7 +71,7 @@ const firstName = computed(() => user.value?.name?.split(' ')[0] ?? 'Konto');
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
-                        <input type="text" class="block w-full pl-10 pr-3 py-2.5 border border-surface-300 rounded-full leading-5 bg-surface-50 placeholder-surface-500 focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 sm:text-sm transition-all shadow-inner" placeholder="Suche...">
+                        <input type="text" v-model="searchQuery" @keyup.enter="performSearch" class="block w-full pl-10 pr-3 py-2.5 border border-surface-300 rounded-full leading-5 bg-surface-50 placeholder-surface-500 focus:outline-none focus:bg-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 sm:text-sm transition-all shadow-inner" placeholder="Suche...">
                     </div>
                 </div>
                 
@@ -100,9 +123,21 @@ const firstName = computed(() => user.value?.name?.split(' ')[0] ?? 'Konto');
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                     Bestellungen & Zahlungen
                                 </Link>
+                                <Link :href="route('superadmin.seating-plans.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                    Saalpläne
+                                </Link>
+                                <Link :href="route('superadmin.cities.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                    Orte
+                                </Link>
                                 <Link :href="route('superadmin.settings.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                                     Einstellungen
+                                </Link>
+                                <Link :href="route('health.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
+                                    System Health
                                 </Link>
                             </template>
                             
@@ -143,6 +178,7 @@ const firstName = computed(() => user.value?.name?.split(' ')[0] ?? 'Konto');
                     </template>
                 </div>
             </div>
-        </div>
-    </nav>
+            </div>
+        </nav>
+    </div>
 </template>

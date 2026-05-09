@@ -171,21 +171,103 @@ class DemoDataSeeder extends Seeder
         ]);
         $comedyEvent->artists()->syncWithoutDetaching([$artist2->id]);
 
-        // 6. Seating Plans
-        $seatingPlan = \App\Models\SeatingPlan::updateOrCreate(['name' => 'Konzert Bestuhlung'], [
-            'location_id' => $stadium->id,
-            'name' => 'Konzert Bestuhlung',
-            'bg_image_path' => null,
-            'layout_data' => [
-                'elements' => [
-                    ['id' => 'S1', 'type' => 'seat', 'x' => 100, 'y' => 100, 'label' => 'Reihe 1 Platz 1', 'color' => '#14b8a6', 'radius' => 15],
-                    ['id' => 'S2', 'type' => 'seat', 'x' => 150, 'y' => 100, 'label' => 'Reihe 1 Platz 2', 'color' => '#14b8a6', 'radius' => 15],
-                    ['id' => 'S3', 'type' => 'seat', 'x' => 200, 'y' => 100, 'label' => 'Reihe 1 Platz 3', 'color' => '#14b8a6', 'radius' => 15],
-                ]
-            ],
+        $artist3 = \App\Models\Artist::updateOrCreate(['slug' => 'the-indies'], [
+            'name' => 'The Indies',
+            'slug' => 'the-indies',
+            'bio' => 'Die aufstrebende Indie-Band aus Berlin.',
         ]);
+        $artist4 = \App\Models\Artist::updateOrCreate(['slug' => 'dj-electro'], [
+            'name' => 'DJ Electro',
+            'slug' => 'dj-electro',
+            'bio' => 'House und Techno Beats.',
+        ]);
+
+        $stadium->update(['city' => 'Berlin']);
+        $club->update(['city' => 'Berlin']);
+
+        $hamburgArena = Location::updateOrCreate(['slug' => 'hamburg-arena'], [
+            'name' => 'Hamburg Arena',
+            'slug' => 'hamburg-arena',
+            'city' => 'Hamburg',
+            'zip' => '22525',
+            'address' => 'Sylvesterallee 10',
+            'country' => 'Deutschland',
+            'description' => 'Die größte Mehrzweckarena Norddeutschlands.',
+            'banner_image_path' => 'locations/demo_stadium.png',
+            'is_global' => true,
+        ]);
+
+        $munichHall = Location::updateOrCreate(['slug' => 'munich-olympiapark'], [
+            'name' => 'Olympiapark München',
+            'slug' => 'munich-olympiapark',
+            'city' => 'München',
+            'zip' => '80809',
+            'address' => 'Spiridon-Louis-Ring 21',
+            'country' => 'Deutschland',
+            'description' => 'Traditionsreicher Park für Großevents.',
+            'is_global' => true,
+        ]);
+
+        // More Events
+        $indieEvent = Event::updateOrCreate(['slug' => 'indie-night-hamburg'], [
+            'title' => 'Indie Night Hamburg',
+            'slug' => 'indie-night-hamburg',
+            'description' => "Die beste Indie-Musik live in der Hamburg Arena.",
+            'start_date' => Carbon::now()->addDays(20)->setHour(20)->setMinute(0),
+            'end_date' => Carbon::now()->addDays(20)->setHour(23)->setMinute(0),
+            'location_id' => $hamburgArena->id,
+            'event_category_id' => $createdCategories['konzerte']->id,
+            'vendor_id' => $vendor->id,
+            'image_path' => 'events/demo_concert.png',
+            'status' => 'published',
+            'tags' => ['Indie', 'Live'],
+        ]);
+        $indieEvent->artists()->syncWithoutDetaching([$artist3->id]);
         
-        $rockEvent->update(['seating_plan_id' => $seatingPlan->id]);
+        $catIndie1 = \App\Models\TicketCategory::updateOrCreate(
+            ['event_id' => $indieEvent->id, 'name' => 'Stehplatz'],
+            ['event_id' => $indieEvent->id, 'name' => 'Stehplatz', 'price' => 35.00, 'quantity' => 2000, 'sold' => 0, 'is_default' => true]
+        );
+
+        $electroEvent = Event::updateOrCreate(['slug' => 'electro-beats-munich'], [
+            'title' => 'Electro Beats München',
+            'slug' => 'electro-beats-munich',
+            'description' => "Die größte Techno-Party des Jahres.",
+            'start_date' => Carbon::now()->addDays(30)->setHour(22)->setMinute(0),
+            'end_date' => Carbon::now()->addDays(31)->setHour(6)->setMinute(0),
+            'location_id' => $munichHall->id,
+            'event_category_id' => $createdCategories['festivals']->id,
+            'vendor_id' => $vendor->id,
+            'image_path' => 'events/demo_festival.png',
+            'status' => 'published',
+            'tags' => ['Electro', 'Party', 'Techno'],
+        ]);
+        $electroEvent->artists()->syncWithoutDetaching([$artist4->id]);
+        
+        $catElectro1 = \App\Models\TicketCategory::updateOrCreate(
+            ['event_id' => $electroEvent->id, 'name' => 'Early Bird'],
+            ['event_id' => $electroEvent->id, 'name' => 'Early Bird', 'price' => 20.00, 'quantity' => 500, 'sold' => 0, 'is_default' => true]
+        );
+        $catElectro2 = \App\Models\TicketCategory::updateOrCreate(
+            ['event_id' => $electroEvent->id, 'name' => 'Regular Ticket'],
+            ['event_id' => $electroEvent->id, 'name' => 'Regular Ticket', 'price' => 30.00, 'quantity' => 2000, 'sold' => 0]
+        );
+
+        // Addons for Rock Event
+        $addonVIP = \App\Models\Addon::updateOrCreate(
+            ['event_id' => $rockEvent->id, 'name' => 'VIP Upgrade'],
+            ['price' => 50.00, 'quantity' => 100]
+        );
+        $addonParking = \App\Models\Addon::updateOrCreate(
+            ['event_id' => $rockEvent->id, 'name' => 'Parkplatz Ticket'],
+            ['price' => 15.00, 'quantity' => 500]
+        );
+
+        // Map AddonVIP only to specific Ticket Categories (e.g., Golden Circle)
+        $goldenCircleCat = \App\Models\TicketCategory::where('event_id', $rockEvent->id)->where('name', 'Golden Circle')->first();
+        if ($goldenCircleCat) {
+            $addonVIP->ticketCategories()->sync([$goldenCircleCat->id]);
+        }
 
         echo "Demo Daten erfolgreich erstellt!\n";
     }

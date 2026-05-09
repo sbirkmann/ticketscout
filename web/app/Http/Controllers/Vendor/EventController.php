@@ -18,6 +18,30 @@ class EventController extends Controller
         return Inertia::render('Vendor/Events/Index', ['events' => $events]);
     }
 
+    public function bulk(Request $request)
+    {
+        $validated = $request->validate([
+            'action' => 'required|in:publish,draft,delete',
+            'event_ids' => 'required|array',
+            'event_ids.*' => 'exists:events,id',
+        ]);
+
+        $events = auth()->user()->events()->whereIn('id', $validated['event_ids'])->get();
+
+        foreach ($events as $event) {
+            if ($validated['action'] === 'publish') {
+                $event->update(['status' => 'published']);
+            } elseif ($validated['action'] === 'draft') {
+                $event->update(['status' => 'draft']);
+            } elseif ($validated['action'] === 'delete') {
+                // Should potentially check if tickets are already sold before deleting
+                $event->delete();
+            }
+        }
+
+        return back()->with('success', 'Bulk-Aktion erfolgreich ausgeführt.');
+    }
+
     public function create()
     {
         $locations = \App\Models\Location::where('vendor_id', auth()->id())
@@ -117,7 +141,9 @@ class EventController extends Controller
     public function show(Event $event)
     {
         if ($event->vendor_id !== auth()->id()) abort(403);
-        $event->load(['ticketCategories', 'addons', 'location', 'category']);
+        $event->load(['ticketCategories', 'addons.ticketCategories', 'location', 'category', 'waitlists' => function($q) {
+            $q->orderBy('created_at', 'desc');
+        }]);
         return Inertia::render('Vendor/Events/Show', ['event' => $event]);
     }
 
@@ -302,5 +328,31 @@ class EventController extends Controller
         }
 
         return back()->with('success', 'Sitzplatz-Kategorien gespeichert.');
+    }
+
+    public function generateAiDescription(Request $request)
+    {
+        if (!auth()->user()->hasRole('vendor')) abort(403);
+
+        $validated = $request->validate([
+            'title' => 'required|string',
+            'tags' => 'nullable|string',
+        ]);
+
+        $title = $validated['title'];
+        $tags = $validated['tags'] ?? 'keine';
+
+        // Dummy AI implementation. In a real app, this would call OpenAI/Gemini API.
+        $generated = "Erleben Sie '$title' hautnah! \n\nDieses besondere Event verspricht unvergessliche Momente. " . 
+            "Egal, ob Sie alleine, mit Freunden oder der Familie kommen – es erwartet Sie ein perfekt abgestimmtes Programm " . 
+            "und eine großartige Atmosphäre. Sichern Sie sich jetzt Ihre Tickets und seien Sie dabei, wenn es heißt: Vorhang auf für $title!\n\n" . 
+            "Highlights: $tags";
+
+        // Simulate API delay
+        sleep(1);
+
+        return response()->json([
+            'description' => $generated
+        ]);
     }
 }

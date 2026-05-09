@@ -21,6 +21,7 @@
     },
     "dependencies": {
         "@stripe/stripe-js": "^9.4.0",
-        "grapesjs": "^0.22.16"
+        "grapesjs": "^0.22.16",
+        "leaflet": "^1.9.4"
     }
 }
