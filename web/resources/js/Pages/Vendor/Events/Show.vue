@@ -16,6 +16,9 @@ const ticketForm = useForm({
     quantity: '',
     is_default: false,
     requires_attendee_name: false,
+    use_dynamic_pricing: false,
+    dynamic_pricing_threshold_percent: '',
+    dynamic_pricing_increase_amount: '',
 });
 const editingTicket = ref(null);
 
@@ -35,9 +38,12 @@ function editTicket(cat) {
     editingTicket.value = cat;
     ticketForm.name = cat.name;
     ticketForm.price = cat.price;
-    ticketForm.quantity = cat.quantity;
+    ticketForm.quantity = cat.capacity || cat.quantity; // it's mapped to capacity in db
     ticketForm.is_default = cat.is_default;
     ticketForm.requires_attendee_name = cat.requires_attendee_name;
+    ticketForm.use_dynamic_pricing = cat.use_dynamic_pricing;
+    ticketForm.dynamic_pricing_threshold_percent = cat.dynamic_pricing_threshold_percent;
+    ticketForm.dynamic_pricing_increase_amount = cat.dynamic_pricing_increase_amount;
 }
 
 function deleteTicket(id) {
@@ -180,6 +186,7 @@ function resetAddonForm() {
                                                     <span v-if="!cat.is_active" class="bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold">Gesperrt</span>
                                                     <span v-if="cat.is_default" class="bg-brand-100 text-brand-600 text-xs px-2 py-0.5 rounded-full font-bold">Standard</span>
                                                     <span v-if="cat.requires_attendee_name" class="bg-blue-100 text-blue-600 text-xs px-2 py-0.5 rounded-full font-bold">Personalisiert</span>
+                                                    <span v-if="cat.use_dynamic_pricing" class="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded-full font-bold" title="Preis steigt bei Knappheit">Dynamisch</span>
                                                 </div>
                                                 <div class="text-sm text-surface-500 mt-1">
                                                     {{ parseFloat(cat.price).toFixed(2).replace('.', ',') }} € • {{ cat.quantity || 'Unbegrenzt' }} verfügbar
@@ -222,6 +229,22 @@ function resetAddonForm() {
                                                     <input v-model="ticketForm.requires_attendee_name" type="checkbox" class="text-brand-500 focus:ring-brand-500 rounded border-surface-300">
                                                     <span class="text-sm text-surface-700 font-bold text-brand-700">Personalisierte Tickets (Gästenamen)</span>
                                                 </label>
+                                                <div class="border-t border-surface-200 mt-4 pt-4">
+                                                    <label class="flex items-center gap-2">
+                                                        <input v-model="ticketForm.use_dynamic_pricing" type="checkbox" class="text-purple-500 focus:ring-purple-500 rounded border-surface-300">
+                                                        <span class="text-sm text-purple-700 font-bold">Dynamisches Pricing aktivieren</span>
+                                                    </label>
+                                                    <div v-if="ticketForm.use_dynamic_pricing" class="mt-3 p-3 bg-purple-50 rounded-xl space-y-3">
+                                                        <div>
+                                                            <label class="block text-xs font-medium text-surface-700 mb-1">Wenn nur noch (%) Tickets übrig sind:</label>
+                                                            <input v-model="ticketForm.dynamic_pricing_threshold_percent" type="number" min="1" max="99" class="w-full rounded-lg border-purple-200 text-sm focus:ring-purple-500 focus:border-purple-500 p-1.5" placeholder="z.B. 20">
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-xs font-medium text-surface-700 mb-1">Steigt der Preis um (€):</label>
+                                                            <input v-model="ticketForm.dynamic_pricing_increase_amount" type="number" step="0.01" min="0" class="w-full rounded-lg border-purple-200 text-sm focus:ring-purple-500 focus:border-purple-500 p-1.5" placeholder="z.B. 5.00">
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="pt-4 flex gap-2">
                                                 <button v-if="editingTicket" type="button" @click="resetTicketForm" class="flex-1 bg-surface-200 hover:bg-surface-300 text-surface-800 py-2 rounded-xl text-sm font-bold transition-colors">Abbrechen</button>

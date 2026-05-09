@@ -256,11 +256,11 @@ class DemoDataSeeder extends Seeder
         // Addons for Rock Event
         $addonVIP = \App\Models\Addon::updateOrCreate(
             ['event_id' => $rockEvent->id, 'name' => 'VIP Upgrade'],
-            ['price' => 50.00, 'quantity' => 100]
+            ['price' => 50.00]
         );
         $addonParking = \App\Models\Addon::updateOrCreate(
             ['event_id' => $rockEvent->id, 'name' => 'Parkplatz Ticket'],
-            ['price' => 15.00, 'quantity' => 500]
+            ['price' => 15.00]
         );
 
         // Map AddonVIP only to specific Ticket Categories (e.g., Golden Circle)

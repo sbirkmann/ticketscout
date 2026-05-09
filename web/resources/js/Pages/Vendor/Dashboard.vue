@@ -55,18 +55,31 @@ const maxRevenue = computed(() => {
                 </div>
 
                 <!-- KPIs -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="bg-white rounded-3xl p-6 border border-surface-200 shadow-sm">
                         <p class="text-sm font-medium text-surface-500 mb-1">Gesamtumsatz</p>
                         <p class="text-3xl font-display font-bold text-surface-900">{{ formatMoney(stats.revenue) }}</p>
                     </div>
                     <div class="bg-white rounded-3xl p-6 border border-surface-200 shadow-sm">
-                        <p class="text-sm font-medium text-surface-500 mb-1">Bezahlte Bestellungen</p>
+                        <p class="text-sm font-medium text-surface-500 mb-1">Bestellungen</p>
                         <p class="text-3xl font-display font-bold text-surface-900">{{ stats.orders }}</p>
                     </div>
                     <div class="bg-white rounded-3xl p-6 border border-surface-200 shadow-sm">
                         <p class="text-sm font-medium text-surface-500 mb-1">Aktive Events</p>
                         <p class="text-3xl font-display font-bold text-surface-900">{{ stats.events }}</p>
+                    </div>
+                    <div class="bg-white rounded-3xl p-6 border border-surface-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute right-0 top-0 mt-2 mr-2">
+                            <span class="flex h-2 w-2 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                        </div>
+                        <p class="text-sm font-medium text-surface-500 mb-1">Live Check-ins</p>
+                        <div class="flex items-end gap-2">
+                            <p class="text-3xl font-display font-bold text-surface-900">{{ stats.checkins }}</p>
+                            <p class="text-xs text-surface-400 pb-1">/ {{ stats.tickets }} Tickets</p>
+                        </div>
                     </div>
                 </div>
 

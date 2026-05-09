@@ -1,6 +1,7 @@
 <script setup>
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import { cartStore } from '@/Stores/cartStore';
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
@@ -31,6 +32,8 @@ function performSearch() {
         router.get(route('events.index'), { search: searchQuery.value });
     }
 }
+
+import { themeStore } from '@/Stores/themeStore';
 </script>
 
 <template>
@@ -49,19 +52,19 @@ function performSearch() {
             {{ $page.props.globalSettings.banner_text }}
         </div>
 
-        <nav class="bg-white border-b border-surface-200 sticky top-0 z-50 shadow-sm">
+        <nav class="bg-white dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 sticky top-0 z-50 shadow-sm transition-colors duration-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
                 <div class="flex items-center gap-8">
                     <Link :href="route('home')" class="flex items-center gap-3">
-                        <div class="font-display font-black text-2xl tracking-tighter text-surface-900">
+                        <div class="font-display font-black text-2xl tracking-tighter text-surface-900 dark:text-white">
                             TICKETSOUT<span class="text-brand-500">24</span>
                         </div>
                     </Link>
-                    <div class="hidden lg:flex items-center gap-6 ml-4 font-medium text-surface-600">
-                        <Link :href="route('events.index')" class="hover:text-brand-600 transition-colors">Events</Link>
-                        <Link :href="route('locations.index')" class="hover:text-brand-600 transition-colors">Locations</Link>
-                        <Link :href="route('artists.index')" class="hover:text-brand-600 transition-colors">Künstler</Link>
+                    <div class="hidden lg:flex items-center gap-6 ml-4 font-medium text-surface-600 dark:text-surface-300">
+                        <Link :href="route('events.index')" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Events</Link>
+                        <Link :href="route('locations.index')" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Locations</Link>
+                        <Link :href="route('artists.index')" class="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">Künstler</Link>
                     </div>
                     
                     <!-- Main Desktop Search -->
@@ -76,6 +79,24 @@ function performSearch() {
                 </div>
                 
                 <div v-if="canLogin" class="flex items-center gap-4">
+                    <!-- Cart Icon -->
+                    <Link :href="cartStore.event ? route('checkout.index', cartStore.event.slug) : '#'" 
+                        class="relative p-2 text-surface-500 hover:text-brand-500 transition-colors rounded-full hover:bg-surface-100"
+                        :class="{ 'opacity-30 cursor-default': !cartStore.event }">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span v-if="cartStore.items.length > 0" class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-brand-500 rounded-full border border-white">
+                            {{ cartStore.items.reduce((s, i) => s + i.qty, 0) }}
+                        </span>
+                    </Link>
+
+                    <!-- Dark Mode Toggle -->
+                    <button @click="themeStore.toggle()" class="text-surface-500 hover:text-brand-500 transition-colors p-2 rounded-full hover:bg-surface-100 dark:hover:bg-surface-800 focus:outline-none" aria-label="Toggle Dark Mode">
+                        <svg v-if="themeStore.isDark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                    </button>
+
                     <!-- Logged in: Name + Dropdown -->
                     <div v-if="user" class="relative">
                         <button @click="toggleDropdown" @blur.capture="() => setTimeout(closeDropdown, 150)" class="flex items-center gap-2 bg-surface-100 hover:bg-surface-200 px-4 py-2.5 rounded-full transition-colors border border-surface-200 focus:outline-none focus:ring-2 focus:ring-brand-400">
@@ -119,6 +140,10 @@ function performSearch() {
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                     Events bearbeiten
                                 </Link>
+                                <Link :href="route('event-moderation.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Event-Freigaben
+                                </Link>
                                 <Link :href="route('superadmin.orders.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                                     Bestellungen & Zahlungen
@@ -139,6 +164,18 @@ function performSearch() {
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
                                     System Health
                                 </Link>
+                                <Link :href="route('superadmin.gift-cards.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
+                                    Globale Gutscheine
+                                </Link>
+                                <Link :href="route('payouts.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    Auszahlungen
+                                </Link>
+                                <Link :href="route('audit.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-brand-50 hover:text-brand-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                                    Audit-Log
+                                </Link>
                             </template>
                             
                             <template v-if="$page.props.auth?.roles?.includes('vendor')">
@@ -157,6 +194,10 @@ function performSearch() {
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                                     Ticket-Design
                                 </Link>
+                                <Link :href="route('vendor.affiliate-links.index')" @click="dropdownOpen = false" class="flex items-center gap-3 px-4 py-3 text-sm text-surface-700 hover:bg-surface-50 hover:text-brand-600 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                                    Affiliate Links
+                                </Link>
                             </template>
                             <div class="border-t border-surface-100 mt-1 pt-1">
                                 <button @click="logout" class="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
@@ -169,7 +210,7 @@ function performSearch() {
 
                     <!-- Not logged in -->
                     <template v-else>
-                        <Link :href="route('login')" class="text-surface-700 font-medium hover:text-brand-600 transition-colors">
+                        <Link :href="route('login')" class="text-surface-700 dark:text-surface-200 font-medium hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
                             Anmelden
                         </Link>
                         <Link v-if="canRegister" :href="route('register')" class="bg-brand-500 text-white px-5 py-2.5 rounded-full font-bold hover:bg-brand-600 transition-colors shadow-sm hidden sm:inline-block">

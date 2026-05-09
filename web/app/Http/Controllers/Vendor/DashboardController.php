@@ -54,14 +54,25 @@ class DashboardController extends Controller
             ]);
         }
 
+        // Check-ins
+        $totalCheckins = \App\Models\Ticket::whereHas('order', fn($q) => $q->whereIn('event_id', $eventIds))
+            ->where('status', 'scanned')
+            ->count();
+            
+        $totalTickets = \App\Models\Ticket::whereHas('order', fn($q) => $q->whereIn('event_id', $eventIds))
+            ->where('status', '!=', 'cancelled')
+            ->count();
+
         return Inertia::render('Vendor/Dashboard', [
             'stripeConnected' => $stripeConnected,
             'recentEvents'    => $events,
             'recentOrders'    => $orders,
             'stats'           => [
-                'revenue' => $totalRevenue,
-                'orders'  => $totalOrders,
-                'events'  => $activeEvents,
+                'revenue'  => $totalRevenue,
+                'orders'   => $totalOrders,
+                'events'   => $activeEvents,
+                'checkins' => $totalCheckins,
+                'tickets'  => $totalTickets,
             ],
             'chartData' => $filledChartData,
         ]);

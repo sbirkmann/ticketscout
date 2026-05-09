@@ -62,4 +62,53 @@ class OrderController extends Controller
 
         return back()->with('success', 'Tickets wurden erneut an ' . $order->billing_email . ' gesendet.');
     }
+
+    public function exportCsv(Request $request)
+    {
+        $vendorId = auth()->id();
+        
+        $orders = Order::whereHas('items.ticketCategory.event', function($q) use ($vendorId) {
+            $q->where('vendor_id', $vendorId);
+        })
+        ->with(['user', 'items.ticketCategory.event'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        $filename = "orders_export_" . date('Y-m-d') . ".csv";
+        $handle = fopen('php://output', 'w');
+        
+        // Add BOM for Excel UTF-8 reading
+        fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        // DATEV-ähnliche Spalten
+        fputcsv($handle, [
+            'Bestellnummer', 'Datum', 'Uhrzeit', 'Status', 'Kunde Name', 'Kunde Email', 
+            'Total Netto', 'Total Brutto', 'Steuer', 'Event', 'Tickets'
+        ], ';');
+
+        foreach ($orders as $order) {
+            $events = $order->items->map(fn($i) => $i->ticketCategory->event->title ?? '')->unique()->implode(', ');
+            $tickets = $order->items->sum('quantity');
+
+            fputcsv($handle, [
+                $order->order_number,
+                $order->created_at->format('d.m.Y'),
+                $order->created_at->format('H:i'),
+                $order->status,
+                $order->billing_name ?: ($order->user->name ?? ''),
+                $order->billing_email ?: ($order->user->email ?? ''),
+                number_format($order->total_net, 2, ',', ''),
+                number_format($order->total_gross, 2, ',', ''),
+                number_format($order->total_tax, 2, ',', ''),
+                $events,
+                $tickets
+            ], ';');
+        }
+
+        fclose($handle);
+        exit;
+    }
 }

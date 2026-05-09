@@ -24,7 +24,16 @@ class TicketCategoryController extends Controller
             'quantity'              => 'nullable|integer|min:1',
             'is_default'            => 'boolean',
             'requires_attendee_name'=> 'boolean',
+            'use_dynamic_pricing'   => 'boolean',
+            'dynamic_pricing_threshold_percent' => 'nullable|integer|min:1|max:99',
+            'dynamic_pricing_increase_amount'   => 'nullable|numeric|min:0',
         ]);
+
+        // Mapping quantity to capacity to match the table
+        if (isset($validated['quantity'])) {
+            $validated['capacity'] = $validated['quantity'];
+            unset($validated['quantity']);
+        }
 
         $event->ticketCategories()->create($validated);
 
@@ -41,7 +50,15 @@ class TicketCategoryController extends Controller
             'quantity'              => 'nullable|integer|min:1',
             'is_default'            => 'boolean',
             'requires_attendee_name'=> 'boolean',
+            'use_dynamic_pricing'   => 'boolean',
+            'dynamic_pricing_threshold_percent' => 'nullable|integer|min:1|max:99',
+            'dynamic_pricing_increase_amount'   => 'nullable|numeric|min:0',
         ]);
+
+        if (isset($validated['quantity'])) {
+            $validated['capacity'] = $validated['quantity'];
+            unset($validated['quantity']);
+        }
 
         $category->update($validated);
 

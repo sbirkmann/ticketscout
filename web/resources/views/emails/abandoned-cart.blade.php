@@ -15,7 +15,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>Hoppla, {{ $user->name }}!</h2>
+            <h2>Hoppla!</h2>
         </div>
         <div class="content">
             <p>Es sieht so aus, als hättest du noch Tickets für <strong>{{ $event->title }}</strong> in deinem Warenkorb liegen lassen.</p>

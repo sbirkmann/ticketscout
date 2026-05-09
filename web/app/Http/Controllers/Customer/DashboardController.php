@@ -77,6 +77,9 @@ class DashboardController extends Controller
                 'total_amount' => $order->total_amount,
                 'status' => $order->status,
                 'created_at' => $order->created_at,
+                'is_gift' => $order->is_gift,
+                'gift_recipient_name' => $order->gift_recipient_name,
+                'gift_message' => $order->gift_message,
                 'event' => [
                     'id' => $order->event->id,
                     'title' => $order->event->title,

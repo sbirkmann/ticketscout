@@ -20,8 +20,7 @@ const submit = () => {
 
     <div class="min-h-screen bg-surface-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
         <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-            <Link :href="route('home')" class="flex items-center justify-center gap-2 mb-6">
-                <img src="/images/logo.png" alt="Ticketsout24 Logo" class="h-12 w-auto" />
+            <Link :href="route('home')" class="mb-6 block">
                 <div class="font-display font-black text-3xl tracking-tighter text-surface-900">
                     TICKETSOUT<span class="text-brand-500">24</span>
                 </div>

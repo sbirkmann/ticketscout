@@ -3,8 +3,15 @@ import { Head, Link } from '@inertiajs/vue3';
 import Navbar from '@/Components/Navbar.vue';
 import Footer from '@/Components/Footer.vue';
 
+import { onMounted } from 'vue';
+import { cartStore } from '@/Stores/cartStore';
+
 const props = defineProps({
     order_id: Number
+});
+
+onMounted(() => {
+    cartStore.clearCart();
 });
 </script>
 
@@ -28,13 +35,26 @@ const props = defineProps({
                     <span v-if="order_id" class="block mt-2 font-mono text-sm text-surface-400">Bestellnummer: #{{ order_id }}</span>
                 </p>
                 
-                <div class="space-x-4">
+                <div class="space-x-4 mb-8">
                     <Link :href="route('home')" class="inline-block bg-surface-900 hover:bg-black text-white px-8 py-3 rounded-full font-bold transition-all shadow-md">
                         Zurück zur Startseite
                     </Link>
                     <Link :href="route('profile.edit')" class="inline-block bg-brand-50 hover:bg-brand-100 text-brand-600 px-8 py-3 rounded-full font-bold transition-all">
                         Zu meinen Tickets
                     </Link>
+                </div>
+
+                <!-- Wallet Integration -->
+                <div class="pt-8 border-t border-surface-100 flex flex-col items-center gap-4">
+                    <p class="text-xs font-bold text-surface-400 uppercase tracking-widest">Tickets zum Handy hinzufügen</p>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <a href="#" class="h-10 hover:opacity-80 transition-opacity">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Add_to_Apple_Wallet_badge.svg/2560px-Add_to_Apple_Wallet_badge.svg.png" class="h-full" alt="Add to Apple Wallet">
+                        </a>
+                        <a href="#" class="h-10 hover:opacity-80 transition-opacity">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Google_Wallet_badge_EN.svg/1200px-Google_Wallet_badge_EN.svg.png" class="h-full" alt="Add to Google Wallet">
+                        </a>
+                    </div>
                 </div>
             </div>
         </main>

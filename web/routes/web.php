@@ -17,12 +17,28 @@ Route::get('/locations', [FrontendController::class, 'locations'])->name('locati
 Route::get('/location/{slug}', [FrontendController::class, 'showLocation'])->name('locations.show');
 Route::get('/orte', [FrontendController::class, 'cities'])->name('cities.index');
 Route::get('/ort/{slug}', [FrontendController::class, 'showCity'])->name('cities.show');
+Route::get('/karte', [FrontendController::class, 'map'])->name('map');
 Route::get('/category/{slug}', [FrontendController::class, 'showCategory'])->name('categories.show');
 Route::get('/artists', [FrontendController::class, 'artists'])->name('artists.index');
 Route::get('/artist/{slug}', [FrontendController::class, 'showArtist'])->name('artists.show');
 Route::get('/event/{slug}', [FrontendController::class, 'showEvent'])->name('event.show');
 Route::post('/event/{event}/waitlist', [\App\Http\Controllers\WaitlistController::class, 'store'])->name('event.waitlist');
 Route::get('/event/{slug}/ics', [FrontendController::class, 'downloadIcs'])->name('event.ics');
+
+// Saalplan Demo
+Route::get('/saalplan/{seatingPlan}', function (\App\Models\SeatingPlan $seatingPlan) {
+    $seatingPlan->load(['rows.seats']);
+    // Find linked event via location
+    $event = \App\Models\Event::where('location_id', $seatingPlan->location_id)->where('status', 'published')->first();
+    $ticketCategories = $event ? $event->ticketCategories->toArray() : [];
+
+    return \Inertia\Inertia::render('SeatingPlan/Show', [
+        'seatingPlan' => $seatingPlan,
+        'event' => $event,
+        'ticketCategories' => $ticketCategories,
+    ]);
+})->name('seating-plan.show');
+
 
 Route::get('/checkout/{event:slug}', [CheckoutController::class, 'index'])->name('checkout.index');
 Route::post('/checkout/{event:slug}/validate-promo', [CheckoutController::class, 'validatePromo'])->name('checkout.validate-promo');
@@ -34,6 +50,22 @@ Route::get('/checkout/success', function () {
 Route::post('/api/voucher/check', [\App\Http\Controllers\VoucherController::class, 'check'])->name('voucher.check');
 Route::post('/voucher/checkout', [\App\Http\Controllers\VoucherController::class, 'checkout'])->name('voucher.checkout');
 Route::get('/voucher/success', [\App\Http\Controllers\VoucherController::class, 'success'])->name('voucher.success');
+
+// Seat Reservation (5-min temp lock) – no auth required (token-based)
+Route::post('/api/seats/reserve', [\App\Http\Controllers\SeatReservationController::class, 'reserve'])->name('seats.reserve');
+Route::post('/api/seats/release', [\App\Http\Controllers\SeatReservationController::class, 'release'])->name('seats.release');
+
+// Fan-to-Fan Resale
+Route::get('/resale', [\App\Http\Controllers\ResaleController::class, 'index'])->name('resale.index');
+Route::middleware('auth')->group(function () {
+    Route::get('/resale/anbieten', [\App\Http\Controllers\ResaleController::class, 'create'])->name('resale.create');
+    Route::post('/resale', [\App\Http\Controllers\ResaleController::class, 'store'])->name('resale.store');
+    Route::post('/resale/{listing}/cancel', [\App\Http\Controllers\ResaleController::class, 'cancel'])->name('resale.cancel');
+    // Group Reservations
+    Route::get('/event/{event:slug}/gruppe', [\App\Http\Controllers\ResaleController::class, 'createGroup'])->name('group.create');
+    Route::post('/event/{event:slug}/gruppe', [\App\Http\Controllers\ResaleController::class, 'storeGroup'])->name('group.store');
+});
+Route::get('/gruppe/{token}', [\App\Http\Controllers\ResaleController::class, 'showGroup'])->name('group.show');
 
 Route::get('/impressum', function() { return Inertia::render('Static/Impressum'); })->name('impressum');
 Route::get('/datenschutz', function() { return Inertia::render('Static/Datenschutz'); })->name('datenschutz');
@@ -99,6 +131,20 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     Route::post('/cities', [\App\Http\Controllers\Superadmin\CityController::class, 'store'])->name('cities.store');
     Route::post('/cities/{city}', [\App\Http\Controllers\Superadmin\CityController::class, 'update'])->name('cities.update');
     Route::delete('/cities/{city}', [\App\Http\Controllers\Superadmin\CityController::class, 'destroy'])->name('cities.destroy');
+    
+    // Global Gift Cards
+    Route::resource('gift-cards', \App\Http\Controllers\Superadmin\GiftCardController::class)->only(['index', 'store', 'destroy']);
+    
+    // Audit Log
+    Route::get('/audit', [\App\Http\Controllers\Superadmin\AuditController::class, 'index'])->name('audit.index');
+
+    // Event Moderation
+    Route::get('/event-moderation', [\App\Http\Controllers\Superadmin\EventModerationController::class, 'index'])->name('event-moderation.index');
+    Route::post('/event-moderation/{event}/approve', [\App\Http\Controllers\Superadmin\EventModerationController::class, 'approve'])->name('event-moderation.approve');
+    Route::post('/event-moderation/{event}/reject', [\App\Http\Controllers\Superadmin\EventModerationController::class, 'reject'])->name('event-moderation.reject');
+    
+    // Payouts
+    Route::resource('payouts', \App\Http\Controllers\Superadmin\PayoutController::class)->only(['index', 'store', 'update']);
 });
 
 Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->group(function () {
@@ -127,6 +173,7 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
 
     // Orders
     Route::get('/orders', [\App\Http\Controllers\Vendor\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/export', [\App\Http\Controllers\Vendor\OrderController::class, 'exportCsv'])->name('orders.export');
     Route::get('/orders/{id}', [\App\Http\Controllers\Vendor\OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{id}/resend', [\App\Http\Controllers\Vendor\OrderController::class, 'resendTickets'])->name('orders.resend');
 
@@ -153,6 +200,9 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     
     // Staff / Scanner Accounts
     Route::resource('staff', \App\Http\Controllers\Vendor\StaffController::class)->only(['index', 'store', 'destroy']);
+    
+    // Affiliate Tracking Links
+    Route::resource('affiliate-links', \App\Http\Controllers\Vendor\AffiliateLinkController::class)->only(['index', 'store', 'destroy']);
 });
 
 Route::middleware(['auth'])->group(function () {

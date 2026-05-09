@@ -64,6 +64,26 @@ class TicketService
         $html = str_replace('{{ seat_info }}', $seatInfo, $html);
         $html = str_replace('{{ qr_code }}', '<img src="'. $qrCodeSvg . '" alt="QR Code" style="width: 100%; height: 100%;" />', $html);
 
+        // Gift Mode Injection
+        $giftHtml = '';
+        if ($ticket->order && $ticket->order->is_gift) {
+            $giftHtml = '<div style="margin-top: 20px; padding: 15px; border: 2px dashed #ec4899; border-radius: 10px; background-color: #fdf2f8; text-align: center;">';
+            $giftHtml .= '<h3 style="color: #db2777; margin-top: 0;">Ein Geschenk für ' . e($ticket->order->gift_recipient_name ?: 'Dich') . '</h3>';
+            if ($ticket->order->gift_message) {
+                $giftHtml .= '<p style="font-style: italic; color: #be185d;">"' . nl2br(e($ticket->order->gift_message)) . '"</p>';
+            }
+            $giftHtml .= '</div>';
+            
+            // If the template has a {{ gift_message }} placeholder, use it, otherwise append to body
+            if (strpos($html, '{{ gift_message }}') !== false) {
+                $html = str_replace('{{ gift_message }}', $giftHtml, $html);
+            } else {
+                $html .= $giftHtml;
+            }
+        } else {
+            $html = str_replace('{{ gift_message }}', '', $html);
+        }
+
         // Apply CSS
         $fullHtml = '<html><head><style>' . $template->css_content . '</style></head><body>' . $html . '</body></html>';
 

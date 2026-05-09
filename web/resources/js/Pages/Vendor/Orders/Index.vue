@@ -48,6 +48,10 @@ function formatDate(dateString) {
                 <div class="bg-white rounded-3xl shadow-sm border border-surface-200 overflow-hidden">
                     <div class="p-6 border-b border-surface-200 flex justify-between items-center">
                         <h3 class="font-bold text-lg text-surface-900">Letzte Bestellungen</h3>
+                        <a :href="route('vendor.orders.export')" target="_blank" class="flex items-center gap-2 bg-surface-100 hover:bg-surface-200 text-surface-800 px-4 py-2 rounded-xl text-sm font-bold transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            Als CSV Exportieren
+                        </a>
                     </div>
                     
                     <div class="overflow-x-auto">

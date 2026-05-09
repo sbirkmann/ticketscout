@@ -16,7 +16,7 @@ const props = defineProps({
 <template>
     <Head title="Ticketsout24 - Erlebe die besten Events" />
 
-    <div class="min-h-screen bg-surface-50 font-sans selection:bg-brand-500 selection:text-white">
+    <div class="min-h-screen bg-surface-50 dark:bg-surface-950 font-sans selection:bg-brand-500 selection:text-white transition-colors duration-200">
         <!-- Navigation -->
         <Navbar />
 
@@ -46,21 +46,21 @@ const props = defineProps({
         </div>
 
         <!-- Categories Horizontal List (Eventim Style) -->
-        <div class="bg-white border-b border-surface-200 py-6 sticky top-20 z-40 shadow-sm hidden md:block">
+        <div class="bg-white dark:bg-surface-900 border-b border-surface-200 dark:border-surface-800 py-6 sticky top-20 z-40 shadow-sm hidden md:block transition-colors duration-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center space-x-8 overflow-x-auto pb-2 scrollbar-hide">
-                    <Link href="#top-events" class="whitespace-nowrap font-bold text-surface-900 border-b-2 border-brand-500 pb-1">Top Events</Link>
-                    <Link v-for="cat in categories" :key="cat.id" :href="'/category/' + cat.slug" class="whitespace-nowrap font-medium text-surface-600 hover:text-brand-500 transition-colors pb-1">
+                    <Link href="#top-events" class="whitespace-nowrap font-bold text-surface-900 dark:text-white border-b-2 border-brand-500 pb-1">Top Events</Link>
+                    <Link v-for="cat in categories" :key="cat.id" :href="'/category/' + cat.slug" class="whitespace-nowrap font-medium text-surface-600 dark:text-surface-300 hover:text-brand-500 dark:hover:text-brand-400 transition-colors pb-1">
                         {{ cat.name }}
                     </Link>
-                    <Link href="#locations" class="whitespace-nowrap font-medium text-surface-600 hover:text-brand-500 transition-colors pb-1">Locations</Link>
+                    <Link href="#locations" class="whitespace-nowrap font-medium text-surface-600 dark:text-surface-300 hover:text-brand-500 dark:hover:text-brand-400 transition-colors pb-1">Locations</Link>
                 </div>
             </div>
         </div>
 
         <!-- Top Events Grid -->
         <div id="top-events" class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="font-display font-bold text-3xl text-surface-900 mb-8 flex items-center gap-3">
+            <h2 class="font-display font-bold text-3xl text-surface-900 dark:text-white mb-8 flex items-center gap-3 transition-colors duration-200">
                 <span class="bg-brand-500 text-white p-2 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </span>
@@ -71,16 +71,16 @@ const props = defineProps({
                 <!-- Event Card -->
                 <EventCard v-for="event in events" :key="event.id" :event="event" />
             </div>
-            <div v-else class="text-center py-16 bg-white rounded-2xl border border-surface-200">
-                <p class="text-surface-500 text-lg">Aktuell keine Events verfügbar. Schau später wieder vorbei!</p>
+            <div v-else class="text-center py-16 bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 transition-colors duration-200">
+                <p class="text-surface-500 dark:text-surface-400 text-lg">Aktuell keine Events verfügbar. Schau später wieder vorbei!</p>
             </div>
         </div>
 
         <!-- Featured Locations -->
-        <div id="locations" class="bg-surface-100 py-16 border-t border-surface-200">
+        <div id="locations" class="bg-surface-100 dark:bg-surface-900 py-16 border-t border-surface-200 dark:border-surface-800 transition-colors duration-200">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-end mb-8">
-                    <h2 class="font-display font-bold text-3xl text-surface-900 flex items-center gap-3">
+                    <h2 class="font-display font-bold text-3xl text-surface-900 dark:text-white flex items-center gap-3 transition-colors duration-200">
                         <span class="bg-surface-900 text-white p-2 rounded-lg">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                         </span>

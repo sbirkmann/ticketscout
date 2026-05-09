@@ -13,13 +13,15 @@ class FrontendController extends Controller
 {
     public function index()
     {
-        $events = Event::where('status', 'published')
+        $query = Event::where('status', 'published')
             ->where('is_approved', true)
             ->whereDate('start_date', '>=', now())
             ->with(['location', 'vendor', 'category'])
-            ->orderBy('start_date', 'asc')
-            ->take(8)
-            ->get();
+            ->orderBy('start_date', 'asc');
+
+        $this->applyVendorContext($query);
+
+        $events = $query->take(8)->get();
 
         $categories = EventCategory::all();
 
@@ -31,12 +33,52 @@ class FrontendController extends Controller
             'locations' => $locations
         ]);
     }
+    
+    public function map()
+    {
+        // Load all future published events with locations
+        $query = Event::where('status', 'published')
+            ->where('is_approved', true)
+            ->whereDate('start_date', '>=', now())
+            ->whereNotNull('location_id')
+            ->with(['location', 'category']);
+
+        $this->applyVendorContext($query);
+
+        $events = $query->get();
+            
+        // Map data for the frontend
+        $mappedEvents = $events->map(function($event) {
+            return [
+                'id' => $event->id,
+                'title' => $event->title,
+                'slug' => $event->slug,
+                'start_date' => $event->start_date,
+                'category' => $event->category->name ?? 'Event',
+                'location' => [
+                    'name' => $event->location->name,
+                    'address' => $event->location->address,
+                    'city' => $event->location->city,
+                ],
+                // We mock coordinates based on city string length just for visual demonstration
+                // A real app would geocode the address
+                'lat' => 51.165691 + (strlen($event->location->city) * 0.1) - (strlen($event->location->zip) * 0.05),
+                'lng' => 10.451526 + (strlen($event->location->name) * 0.1) - (strlen($event->location->city) * 0.05),
+            ];
+        });
+
+        return Inertia::render('Map', [
+            'events' => $mappedEvents
+        ]);
+    }
 
     public function events(Request $request)
     {
         $query = Event::where('status', 'published')
             ->where('is_approved', true)
             ->with(['location', 'vendor', 'category', 'ticketCategories']);
+
+        $this->applyVendorContext($query);
 
         // Filter by search term
         if ($request->filled('search')) {
@@ -78,16 +120,27 @@ class FrontendController extends Controller
 
         $events = $query->paginate(12)->withQueryString();
 
-        return Inertia::render('Event/Index', [
+        return Inertia::render('Events/Index', [
             'events' => $events,
             'filters' => $request->only(['search', 'category', 'date_from', 'date_to', 'sort']),
-            'categories' => EventCategory::all()
+            'categories' => EventCategory::all(),
         ]);
+    }
+
+    private function applyVendorContext($query)
+    {
+        if (request()->has('vendor_context')) {
+            $query->where('vendor_id', request()->vendor_context);
+        }
     }
 
     public function locations()
     {
-        $locations = Location::where('is_global', true)->where('is_approved', true)->get();
+        $locations = Location::where('is_global', true)->where('is_approved', true)->get()->map(function($location) {
+            $location->lat = 51.165691 + (strlen($location->city ?? '') * 0.1) - (strlen($location->zip ?? '') * 0.05);
+            $location->lng = 10.451526 + (strlen($location->name ?? '') * 0.1) - (strlen($location->city ?? '') * 0.05);
+            return $location;
+        });
 
         return Inertia::render('Locations/Index', [
             'locations' => $locations
@@ -145,6 +198,21 @@ class FrontendController extends Controller
             }])
             ->firstOrFail();
 
+        // Affiliate Link Tracking
+        if (request()->has('ref')) {
+            $affiliateLink = \App\Models\AffiliateLink::where('code', request('ref'))->first();
+            if ($affiliateLink) {
+                // Increment clicks (only once per session)
+                if (!session()->has('tracked_ref_' . $affiliateLink->code)) {
+                    $affiliateLink->increment('clicks');
+                    session()->put('tracked_ref_' . $affiliateLink->code, true);
+                }
+                
+                // Store ref in session for order attribution (expires after 24 hours via default session lifetime, or we can use cookie)
+                session()->put('affiliate_ref', $affiliateLink->id);
+            }
+        }
+
         // Calculate Social Proof / FOMO
         $totalCapacity = $event->ticketCategories->sum('capacity');
         $totalSold = \App\Models\Ticket::whereHas('order', function($q) use ($event) {
@@ -158,6 +226,13 @@ class FrontendController extends Controller
         // Simulated live viewers (cache for 5 minutes per event to keep it consistent for the user)
         $viewingNow = cache()->remember('event_viewers_' . $event->id, 300, function () {
             return rand(3, 18);
+        });
+
+        // Map dynamic prices for the frontend
+        $event->ticketCategories->transform(function ($category) {
+            // Override the price attribute directly so we don't have to change the frontend
+            $category->price = $category->current_price;
+            return $category;
         });
 
         return Inertia::render('Event/Show', [
@@ -221,6 +296,7 @@ class FrontendController extends Controller
         $category = EventCategory::where('slug', $slug)->firstOrFail();
         $events = Event::where('event_category_id', $category->id)
             ->where('status', 'published')
+            ->where('is_approved', true)
             ->whereDate('start_date', '>=', now())
             ->with(['location', 'vendor', 'ticketCategories'])
             ->orderBy('start_date', 'asc')

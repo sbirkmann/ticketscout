@@ -9,20 +9,20 @@ use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use App\Models\Order;
+use App\Models\AbandonedCart;
 
 class AbandonedCartMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $order;
+    public $cart;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(Order $order)
+    public function __construct(AbandonedCart $cart)
     {
-        $this->order = $order;
+        $this->cart = $cart;
     }
 
     /**
@@ -31,7 +31,7 @@ class AbandonedCartMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Du hast da was vergessen! - ' . $this->order->event->title,
+            subject: 'Du hast da was vergessen! - ' . $this->cart->event->title,
         );
     }
 
@@ -43,10 +43,9 @@ class AbandonedCartMail extends Mailable
         return new Content(
             view: 'emails.abandoned-cart',
             with: [
-                'order' => $this->order,
-                'event' => $this->order->event,
-                'user' => $this->order->user,
-                'checkoutUrl' => route('checkout', ['event' => $this->order->event->slug]),
+                'cart' => $this->cart,
+                'event' => $this->cart->event,
+                'checkoutUrl' => route('checkout.index', ['event' => $this->cart->event->slug]),
             ]
         );
     }

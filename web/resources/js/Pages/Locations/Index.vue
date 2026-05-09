@@ -2,9 +2,58 @@
 import { Head, Link } from '@inertiajs/vue3';
 import Navbar from '@/Components/Navbar.vue';
 import Footer from '@/Components/Footer.vue';
+import { onMounted, ref } from 'vue';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-defineProps({
+const props = defineProps({
     locations: Array
+});
+
+const mapContainer = ref(null);
+
+onMounted(() => {
+    // Fix leaflet marker issue in vite/webpack
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+    });
+
+    if (mapContainer.value && props.locations.length > 0) {
+        // Initialize map centered roughly on Germany if no specific bounds
+        const map = L.map(mapContainer.value).setView([51.165691, 10.451526], 6);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const bounds = L.latLngBounds();
+        let hasValidCoords = false;
+
+        props.locations.forEach(location => {
+            if (location.lat && location.lng) {
+                hasValidCoords = true;
+                const marker = L.marker([location.lat, location.lng]).addTo(map);
+                
+                const popupContent = `
+                    <div style="text-align: center;">
+                        <strong style="display: block; font-size: 16px; margin-bottom: 5px;">${location.name}</strong>
+                        <p style="margin: 0 0 10px 0; font-size: 13px; color: #666;">${location.city}</p>
+                        <a href="/locations/${location.slug}" style="display: inline-block; background: #6366f1; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 12px;">Events ansehen</a>
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                bounds.extend([location.lat, location.lng]);
+            }
+        });
+
+        if (hasValidCoords) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    }
 });
 </script>
 
@@ -17,12 +66,17 @@ defineProps({
         <div class="bg-surface-900 py-16">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                 <h1 class="font-display font-black text-4xl text-white mb-4">Locations & Venues</h1>
-                <p class="text-surface-400 max-w-2xl mx-auto text-lg">Entdecke die besten Veranstaltungsorte und Hallen für deine nächsten Events.</p>
+                <p class="text-surface-400 max-w-2xl mx-auto text-lg">Entdecke die besten Veranstaltungsorte und Hallen für deine nächsten Events auf unserer interaktiven Karte.</p>
             </div>
         </div>
 
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             
+            <!-- Map Container -->
+            <div class="bg-white p-2 rounded-3xl shadow-sm border border-surface-200 mb-12">
+                <div ref="mapContainer" class="w-full h-[400px] rounded-2xl z-0"></div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <Link v-for="location in locations" :key="location.id" :href="route('locations.show', location.slug)" class="group bg-white rounded-3xl overflow-hidden shadow-sm border border-surface-200 hover:shadow-lg transition-all duration-300 flex flex-col">
                     <div class="h-48 bg-surface-200 relative overflow-hidden">

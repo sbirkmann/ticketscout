@@ -160,7 +160,7 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
                                 <h4 class="font-bold text-surface-900">{{ vendor.name }}</h4>
                                 <p class="text-sm text-surface-500 truncate">{{ vendor.email }}</p>
                             </div>
-                            <Link :href="route('impersonate', vendor.id)" method="post" as="button" class="w-full py-2 text-sm font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors text-center">
+                            <Link :href="route('superadmin.impersonate', vendor.id)" method="post" as="button" class="w-full py-2 text-sm font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors text-center">
                                 Login als {{ vendor.name }}
                             </Link>
                         </div>

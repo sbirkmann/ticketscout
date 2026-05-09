@@ -31,7 +31,7 @@ const toggleFavorite = async (e) => {
 </script>
 
 <template>
-    <Link :href="route('event.show', event.slug)" class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-glass border border-surface-200 hover:border-brand-300 transition-all duration-300 flex flex-col relative block">
+    <Link :href="route('event.show', event.slug)" class="group bg-white dark:bg-surface-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-glass border border-surface-200 dark:border-surface-700 hover:border-brand-300 transition-all duration-300 flex flex-col relative block">
         <!-- Favorite Button -->
         <button @click="toggleFavorite" :disabled="isLoading" class="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-white/80 backdrop-blur shadow flex items-center justify-center transition-transform hover:scale-110 focus:outline-none">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-colors duration-300" :class="isFavorited ? 'text-red-500 fill-current' : 'text-surface-400'" viewBox="0 0 24 24" stroke="currentColor" :stroke-width="isFavorited ? 0 : 2" stroke-linecap="round" stroke-linejoin="round">
@@ -52,10 +52,10 @@ const toggleFavorite = async (e) => {
             </div>
         </div>
         <div class="p-5 flex-1 flex flex-col z-10">
-            <h3 class="font-bold text-lg text-surface-900 mb-2 leading-tight group-hover:text-brand-600 transition-colors line-clamp-2">{{ event.title }}</h3>
-            <p class="text-surface-500 text-sm mb-4 flex-1 line-clamp-2">{{ event.description || 'Sichere dir jetzt deine Tickets.' }}</p>
+            <h3 class="font-bold text-lg text-surface-900 dark:text-white mb-2 leading-tight group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2">{{ event.title }}</h3>
+            <p class="text-surface-500 dark:text-surface-400 text-sm mb-4 flex-1 line-clamp-2">{{ event.description || 'Sichere dir jetzt deine Tickets.' }}</p>
             
-            <div class="flex items-center text-surface-600 text-xs font-medium mt-auto pt-4 border-t border-surface-100">
+            <div class="flex items-center text-surface-600 dark:text-surface-400 text-xs font-medium mt-auto pt-4 border-t border-surface-100 dark:border-surface-700">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
