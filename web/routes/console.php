@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 Schedule::command('orders:event-reminders')->hourly();
 Schedule::command('ticket:process-abandoned-carts')->hourly();
+Schedule::command('payouts:generate')->dailyAt('02:00');

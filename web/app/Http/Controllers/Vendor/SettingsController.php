@@ -39,12 +39,13 @@ class SettingsController extends Controller
             'sender_name' => 'nullable|string|max:255',
             'ticket_html' => 'nullable|string',
             'ticket_css' => 'nullable|string',
+            'custom_domain' => 'nullable|string|max:255',
         ]);
 
         $settings->update($request->only([
             'tax_rate', 'invoice_prefix', 'invoice_footer_text', 'disable_invoicing',
             'company_name', 'company_address', 'tax_number', 'vat_id',
-            'iban', 'bic', 'bank_name', 'email_template', 'sender_name'
+            'iban', 'bic', 'bank_name', 'email_template', 'sender_name', 'custom_domain'
         ]));
 
         // Update default ticket template

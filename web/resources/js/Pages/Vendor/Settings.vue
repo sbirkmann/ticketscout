@@ -20,6 +20,7 @@ const form = useForm({
     bank_name: props.settings.bank_name || '',
     email_template: props.settings.email_template || 'Vielen Dank für deine Bestellung! Anbei findest du deine Tickets.',
     sender_name: props.settings.sender_name || '',
+    custom_domain: props.settings.custom_domain || '',
 });
 
 const submit = () => {
@@ -146,6 +147,18 @@ const submit = () => {
                                     <label class="block text-sm font-medium text-surface-700 mb-1">Standard E-Mail Text (beim Ticket-Versand)</label>
                                     <textarea v-model="form.email_template" rows="5" class="w-full rounded-xl border-surface-300 focus:ring-brand-500"></textarea>
                                     <p class="text-xs text-surface-500 mt-1">Dieser Text wird in der E-Mail angezeigt, wenn ein Kunde Tickets kauft.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Whitelabel & Domains -->
+                        <div>
+                            <h3 class="text-lg font-bold text-surface-900 border-b border-surface-200 pb-2 mb-4">White-Label & Domain</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-surface-700 mb-1">Eigene Domain (Custom Domain)</label>
+                                    <input v-model="form.custom_domain" type="text" class="w-full max-w-sm rounded-xl border-surface-300 focus:ring-brand-500" placeholder="z.B. tickets.meine-band.de">
+                                    <p class="text-xs text-surface-500 mt-1">Leite deine eigene Domain (CNAME/A-Record) auf unsere Plattform, um deinen eigenen gebrandeten Ticket-Shop zu betreiben.</p>
                                 </div>
                             </div>
                         </div>
