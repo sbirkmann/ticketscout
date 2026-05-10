@@ -106,6 +106,23 @@ class FrontendController extends Controller
             $query->whereDate('start_date', '<=', $request->date_to);
         }
 
+        // Erweiterte Filter: Maximalpreis
+        if ($request->filled('price_max')) {
+            $query->whereHas('ticketCategories', function($q) use ($request) {
+                $q->where('price', '<=', $request->price_max);
+            });
+        }
+
+        // Erweiterte Filter: Tags (z.B. Barrierefrei)
+        if ($request->filled('tag')) {
+            $query->whereJsonContains('tags', $request->tag);
+        }
+        
+        // Erweiterte Filter: Barrierefreiheit Explizit
+        if ($request->filled('accessible') && $request->accessible == 'true') {
+            $query->whereJsonContains('tags', 'Barrierefrei');
+        }
+
         // Sort
         $sort = $request->input('sort', 'date_asc');
         switch ($sort) {
@@ -122,7 +139,7 @@ class FrontendController extends Controller
 
         return Inertia::render('Events/Index', [
             'events' => $events,
-            'filters' => $request->only(['search', 'category', 'date_from', 'date_to', 'sort']),
+            'filters' => $request->only(['search', 'category', 'date_from', 'date_to', 'sort', 'price_max', 'tag', 'accessible']),
             'categories' => EventCategory::all(),
         ]);
     }
@@ -195,6 +212,8 @@ class FrontendController extends Controller
                 $q->where('status', 'published')->where('is_approved', true);
             }, 'parentEvent' => function($q) {
                 $q->where('status', 'published')->where('is_approved', true)->with('siblingDates');
+            }, 'reviews' => function($q) {
+                $q->where('is_approved', true)->with('user:id,name');
             }])
             ->firstOrFail();
 
@@ -235,8 +254,17 @@ class FrontendController extends Controller
             return $category;
         });
 
+        $canReview = false;
+        if (auth()->check()) {
+            $canReview = \App\Models\Order::where('user_id', auth()->id())
+                ->where('event_id', $event->id)
+                ->where('status', 'paid')
+                ->exists();
+        }
+
         return Inertia::render('Event/Show', [
             'event' => $event,
+            'can_review' => $canReview,
             'socialProof' => [
                 'viewing_now' => $viewingNow,
                 'sold_out_percentage' => $soldOutPercentage,

@@ -12,6 +12,10 @@ const props = defineProps({
     socialProof: {
         type: Object,
         default: () => ({ viewing_now: 0, sold_out_percentage: 0, show_sold_out_badge: false })
+    },
+    can_review: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -69,6 +73,20 @@ function submitWaitlist() {
         preserveScroll: true,
         onSuccess: () => {
             waitlistForm.reset();
+        }
+    });
+}
+
+const reviewForm = useForm({
+    rating: 5,
+    comment: ''
+});
+
+function submitReview() {
+    reviewForm.post(route('events.review', props.event.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            reviewForm.reset();
         }
     });
 }
@@ -444,6 +462,77 @@ const schemaMarkup = computed(() => {
                                 :src="`https://maps.google.com/maps?width=100%25&height=400&hl=de&q=${encodeURIComponent(event.location.address + ', ' + event.location.zip + ' ' + event.location.city)}&t=&z=14&ie=UTF8&iwloc=B&output=embed`"
                                 class="w-full h-full grayscale contrast-125 opacity-80"
                             ></iframe>
+                        </div>
+                    </div>
+                    <!-- Reviews Section -->
+                    <div class="bg-white dark:bg-surface-900 rounded-3xl p-8 shadow-sm border border-surface-200 dark:border-surface-800">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="font-display font-bold text-2xl text-surface-900 dark:text-white">Bewertungen</h2>
+                            <div v-if="event.average_rating > 0" class="flex items-center gap-2">
+                                <span class="text-2xl font-bold text-surface-900 dark:text-white">{{ event.average_rating }}</span>
+                                <div class="flex text-yellow-400">
+                                    <svg v-for="i in 5" :key="i" class="w-5 h-5" :class="i <= Math.round(event.average_rating) ? 'text-yellow-400' : 'text-surface-300'" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                </div>
+                                <span class="text-sm text-surface-500">({{ event.reviews?.length || 0 }})</span>
+                            </div>
+                        </div>
+
+                        <!-- Review Form -->
+                        <div v-if="can_review" class="mb-8 p-6 bg-surface-50 dark:bg-surface-950 rounded-2xl border border-surface-200 dark:border-surface-800">
+                            <h3 class="font-bold text-lg text-surface-900 dark:text-white mb-4">Wie hat dir das Event gefallen?</h3>
+                            
+                            <div v-if="$page.props.flash?.success" class="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl mb-4 text-sm font-medium">
+                                {{ $page.props.flash.success }}
+                            </div>
+                            <div v-if="$page.props.flash?.error" class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl mb-4 text-sm font-medium">
+                                {{ $page.props.flash.error }}
+                            </div>
+
+                            <form @submit.prevent="submitReview" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-bold text-surface-700 mb-2">Deine Bewertung</label>
+                                    <div class="flex gap-2">
+                                        <button type="button" v-for="star in 5" :key="star" @click="reviewForm.rating = star" class="focus:outline-none transition-transform hover:scale-110">
+                                            <svg class="w-8 h-8" :class="star <= reviewForm.rating ? 'text-yellow-400' : 'text-surface-300 dark:text-surface-600'" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                        </button>
+                                    </div>
+                                    <p v-if="reviewForm.errors.rating" class="text-red-500 text-xs mt-1">{{ reviewForm.errors.rating }}</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-bold text-surface-700 mb-1">Kommentar (optional)</label>
+                                    <textarea v-model="reviewForm.comment" rows="3" class="w-full rounded-xl border-surface-300 shadow-sm focus:border-brand-500 focus:ring-brand-500" placeholder="Teile deine Erfahrungen mit anderen..."></textarea>
+                                    <p v-if="reviewForm.errors.comment" class="text-red-500 text-xs mt-1">{{ reviewForm.errors.comment }}</p>
+                                </div>
+                                
+                                <button type="submit" :disabled="reviewForm.processing" class="bg-brand-500 text-white font-bold py-2.5 px-6 rounded-xl shadow hover:bg-brand-600 transition-colors disabled:opacity-50">
+                                    {{ reviewForm.processing ? 'Wird gesendet...' : 'Bewertung absenden' }}
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Review List -->
+                        <div v-if="event.reviews && event.reviews.length > 0" class="space-y-6">
+                            <div v-for="review in event.reviews" :key="review.id" class="border-b border-surface-200 dark:border-surface-800 pb-6 last:border-0 last:pb-0">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-lg">
+                                        {{ review.user?.name?.charAt(0) || 'U' }}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-surface-900 dark:text-white">{{ review.user?.name || 'Anonym' }}</div>
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex text-yellow-400">
+                                                <svg v-for="i in 5" :key="i" class="w-3.5 h-3.5" :class="i <= review.rating ? 'text-yellow-400' : 'text-surface-300'" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                            </div>
+                                            <span class="text-xs text-surface-500">{{ new Date(review.created_at).toLocaleDateString('de-DE') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p v-if="review.comment" class="text-surface-700 dark:text-surface-300 ml-13 pl-13">{{ review.comment }}</p>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-8 text-surface-500">
+                            Noch keine Bewertungen vorhanden. Sei der Erste!
                         </div>
                     </div>
 

@@ -9,7 +9,8 @@ const form = useForm({
     settings: {
         banner_active: props.settings.banner_active || '0',
         banner_text: props.settings.banner_text || '',
-        banner_color: props.settings.banner_color || 'brand-500'
+        banner_color: props.settings.banner_color || 'brand-500',
+        platform_fee: props.settings.platform_fee || '5'
     }
 });
 
@@ -85,6 +86,17 @@ function save() {
                             </div>
                         </div>
                     </div>
+
+                <div class="p-8 border-t border-surface-200">
+                    <h2 class="text-xl font-bold text-surface-900 mb-6 border-b border-surface-100 pb-2">Gebühren & Finanzen</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold text-surface-700 mb-1">Standard Plattform-Gebühr (%)</label>
+                            <input type="number" step="0.01" min="0" max="100" v-model="form.settings.platform_fee" class="w-full sm:w-1/3 rounded-xl border-surface-300 focus:ring-brand-400 focus:border-brand-400" placeholder="z.B. 5" />
+                            <p class="text-xs text-surface-500 mt-1">Diese Gebühr wird vom Umsatz pro Event abgezogen, sofern beim Vendor keine individuelle Gebühr hinterlegt ist.</p>
+                        </div>
+                    </div>
+                </div>
                 </div>
                 
                 <div class="bg-surface-50 px-8 py-4 border-t border-surface-100 flex justify-end">

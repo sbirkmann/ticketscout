@@ -191,6 +191,9 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     // CRM / Newsletter
     Route::get('/crm', [\App\Http\Controllers\Vendor\CRMController::class, 'index'])->name('crm.index');
     Route::post('/crm/send', [\App\Http\Controllers\Vendor\CRMController::class, 'send'])->name('crm.send');
+    
+    // Waitlist Notification
+    Route::post('/events/{event}/waitlist/{waitlist}/notify', [\App\Http\Controllers\Vendor\EventController::class, 'notifyWaitlist'])->name('events.waitlist.notify');
 
     // Echtzeit Check-in Tracker
     Route::get('/checkins', [\App\Http\Controllers\Vendor\CheckinController::class, 'index'])->name('checkins.index');
@@ -208,6 +211,7 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
 Route::middleware(['auth'])->group(function () {
     Route::post('/events/{event}/favorite', [\App\Http\Controllers\Customer\FavoriteController::class, 'toggle'])->name('events.favorite');
     Route::get('/favorites', [\App\Http\Controllers\Customer\FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/events/{event}/review', [\App\Http\Controllers\Customer\ReviewController::class, 'store'])->name('events.review');
 });
 
 Route::middleware(['auth', 'role:vendor'])->group(function () {

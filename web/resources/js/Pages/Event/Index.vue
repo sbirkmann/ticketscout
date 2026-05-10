@@ -17,6 +17,9 @@ const category = ref(props.filters.category || '');
 const date_from = ref(props.filters.date_from || '');
 const date_to = ref(props.filters.date_to || '');
 const sort = ref(props.filters.sort || 'date_asc');
+const price_max = ref(props.filters.price_max || '');
+const tag = ref(props.filters.tag || '');
+const accessible = ref(props.filters.accessible === 'true' || false);
 
 const updateFilters = debounce(() => {
     router.get(route('events.index'), {
@@ -24,11 +27,14 @@ const updateFilters = debounce(() => {
         category: category.value,
         date_from: date_from.value,
         date_to: date_to.value,
-        sort: sort.value
+        sort: sort.value,
+        price_max: price_max.value,
+        tag: tag.value,
+        accessible: accessible.value
     }, { preserveState: true, replace: true, preserveScroll: true });
 }, 300);
 
-watch([search, category, date_from, date_to, sort], updateFilters);
+watch([search, category, date_from, date_to, sort, price_max, tag, accessible], updateFilters);
 
 function clearFilters() {
     search.value = '';
@@ -36,6 +42,9 @@ function clearFilters() {
     date_from.value = '';
     date_to.value = '';
     sort.value = 'date_asc';
+    price_max.value = '';
+    tag.value = '';
+    accessible.value = false;
 }
 </script>
 
@@ -91,6 +100,26 @@ function clearFilters() {
                                     <input type="date" v-model="date_from" class="w-full rounded-xl border-surface-300 focus:ring-brand-400 focus:border-brand-400 text-sm" />
                                     <input type="date" v-model="date_to" class="w-full rounded-xl border-surface-300 focus:ring-brand-400 focus:border-brand-400 text-sm" />
                                 </div>
+                            </div>
+                            
+                            <!-- Price -->
+                            <div>
+                                <label class="block text-sm font-bold text-surface-700 mb-2">Maximalpreis (€)</label>
+                                <input type="number" v-model="price_max" min="0" step="5" class="w-full rounded-xl border-surface-300 focus:ring-brand-400 focus:border-brand-400 text-sm" placeholder="z.B. 50" />
+                            </div>
+                            
+                            <!-- Tags -->
+                            <div>
+                                <label class="block text-sm font-bold text-surface-700 mb-2">Stichwort / Tag</label>
+                                <input type="text" v-model="tag" class="w-full rounded-xl border-surface-300 focus:ring-brand-400 focus:border-brand-400 text-sm" placeholder="z.B. Open Air" />
+                            </div>
+                            
+                            <!-- Accessible -->
+                            <div>
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" v-model="accessible" class="rounded border-surface-300 text-brand-500 focus:ring-brand-500" />
+                                    <span class="text-sm font-medium text-surface-700 group-hover:text-brand-600 transition-colors">Nur Barrierefreie Events</span>
+                                </label>
                             </div>
                             
                             <!-- Sorting -->

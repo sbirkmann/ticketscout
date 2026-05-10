@@ -44,23 +44,17 @@
 - [x] Completely finish the main task before starting anything new (unless it's fixing errors).
 
 ### Currently Working On:
-- **Interaktive Platzauswahl / Saalplan (Checkout)**
-  - [x] Backend: `seating_rows` & `seating_seats` Tabellen + Modelle.
-  - [x] Komponente: `SeatSelector.vue` mit visueller Reihen/Sitz-Ansicht.
-  - [x] Buchungslogik: Seat-Status (available/reserved/sold) integriert.
-  - [x] Orphan-Seat Prevention (keine Einzelplätze frei lassen).
-- **Gruppen-Käufe (Group Checkout)**
-  - [x] Migration: `group_reservations` Tabelle.
-  - [x] Link generieren & teilen (Group/Show.vue mit Copy-Button).
-  - [x] Frontend: Group/Create.vue & Group/Show.vue mit Fortschrittsbar.
-  - [x] Payment-Flow: Teilnehmer können ihren Anteil bezahlen.
-- **Ticket-Weiterverkauf (Fan-to-Fan Resale)**
-  - [x] Migration: `ticket_listings` Tabelle.
-  - [x] Frontend: Resale/Index.vue (Marktplatz) & Resale/Create.vue (Anbieten).
-  - [x] Kauf-Logik: Tickets sicher über Checkout von anderen Usern kaufen.
+- **Event-Bewertungen (Reviews & Ratings)**
+  - [x] Migration & Model (`Review`) erstellen (erledigt)
+  - [x] `Customer/ReviewController` für das Speichern von Bewertungen
+  - [x] Frontend-Integration in `Events/Show.vue`
 
-### User Input (2026-05-09):
-- "weiter mit den tasks" -> Saalplan, Gruppen-Käufe & Resale gestartet.
+- **Platform Fee (Plattform-Gebühren)**
+  - [x] Global via Settings (`GlobalSetting::get('platform_fee')`)
+  - [x] Individuell pro Vendor (`custom_platform_fee` in `vendor_settings`)
+
+### User Input (2026-05-10):
+- "add to tasks / remember: Platform fee global via settings, or individual per vendor (setting via admin)" -> Erledigt, dynamische Berechnung im `CheckoutController` integriert.
 
 ### User Input (2026-05-09) – Saalplan & Cart:
 - [x] Kategorien im "Gewählte Plätze" Banner anzeigen (pro Sitz: Label + Kategorie) ✅
@@ -73,7 +67,7 @@
 *Hier ist eine Liste von umfassenden Erweiterungen für alle Bereiche. Die markierten werden sofort umgesetzt.*
 
 #### Frontend & Customer Experience
-- [x] **Event-Warteliste (Waitlist)**: Kunden können sich bei ausverkauften Events auf eine Warteliste eintragen.
+- [x] **Event-Warteliste (Waitlist)**: Kunden können sich bei ausverkauften Events auf eine Warteliste eintragen. ✅
 - [x] **Interaktive Platzauswahl (Saalplan)**: Visueller Saalplan im Checkout zur punktgenauen Sitzplatzauswahl. ✅
 - [x] **Platzauswahl-Regeln**: Verhinderung von isolierten Einzelplätzen (Orphan Seats) bei der Buchung. ✅
 - [x] **Social Proof / FOMO**: Anzeige "X Personen schauen sich dieses Event gerade an". ✅
@@ -86,30 +80,30 @@
 - [x] **Erinnerungen**: E-Mail-Erinnerung 24h vor dem Event (mit Wetter, Anfahrt). ✅
 - [x] **Apple Wallet / Google Wallet Integration**: Tickets direkt ins Handy-Wallet laden. ✅
 - [x] **Dark Mode Unterstützung**: Vollständiges Dark-Theme für das gesamte Frontend. ✅
-- [x] **Erweiterte Filter**: Nach Datum, Preis, Tags, Barrierefreiheit, etc. filtern.
-- [x] **Kunden-Treueprogramm (Loyalty)**: Punkte sammeln für jeden Kauf, einlösbar für Rabatte.
+- [x] **Erweiterte Filter**: Nach Datum, Preis, Tags, Barrierefreiheit, etc. filtern. ✅
+- [x] **Kunden-Treueprogramm (Loyalty)**: Punkte sammeln für jeden Kauf, einlösbar für Rabatte. ✅
 
 #### Vendor (Veranstalter) Dashboard
-- [x] **AI-Event-Beschreibung**: "Mit KI generieren" Button im Event-Editor, der aus Titel und Tags einen Text generiert.
-- [x] **Umsatz-Statistiken (Charts)**: Visuelle Graphen für Ticketverkäufe über Zeit im Dashboard.
+- [x] **AI-Event-Beschreibung**: "Mit KI generieren" Button im Event-Editor, der aus Titel und Tags einen Text generiert. ✅
+- [x] **Umsatz-Statistiken (Charts)**: Visuelle Graphen für Ticketverkäufe über Zeit im Dashboard. ✅
 - [x] **Abandoned Cart Recovery**: Automatische E-Mails an Kunden, die den Checkout abgebrochen haben. ✅
-- [x] **CRM / Newsletter**: Einfaches Tool, um E-Mails an alle bisherigen Ticketkäufer eines bestimmten Events zu senden.
-- [x] **Gutschein-Kampagnen**: Eigene Rabattcodes (%, fixer Betrag) erstellen und verwalten.
-- [x] **Massen-Bearbeitung**: Mehrere Events gleichzeitig bearbeiten (z.B. Status ändern).
-- [x] **Staff-Accounts**: Teammitglieder mit limitierten Rechten (z.B. nur Einlass) hinzufügen.
+- [x] **CRM / Newsletter**: Einfaches Tool, um E-Mails an alle bisherigen Ticketkäufer eines bestimmten Events zu senden. ✅
+- [x] **Gutschein-Kampagnen**: Eigene Rabattcodes (%, fixer Betrag) erstellen und verwalten. ✅
+- [x] **Massen-Bearbeitung**: Mehrere Events gleichzeitig bearbeiten (z.B. Status ändern). ✅
+- [x] **Staff-Accounts**: Teammitglieder mit limitierten Rechten (z.B. nur Einlass) hinzufügen. ✅
 - [x] **Custom Domains / White-Label**: Vendor-Landingpage unter eigener Domain hosten. ✅
-- [x] **Echtzeit Check-in Tracker**: Live-Statistiken am Event-Tag (Wie viele sind schon drin?).
-- [x] **Affiliate-Links (Tracking)**: Spezielle Links erstellen, um zu sehen, welche Promo-Aktion am besten funktioniert.
-- [x] **Dynamisches Pricing**: Preise steigen automatisch, wenn nur noch X Tickets da sind.
+- [x] **Echtzeit Check-in Tracker**: Live-Statistiken am Event-Tag (Wie viele sind schon drin?). ✅
+- [x] **Affiliate-Links (Tracking)**: Spezielle Links erstellen, um zu sehen, welche Promo-Aktion am besten funktioniert. ✅
+- [x] **Dynamisches Pricing**: Preise steigen automatisch, wenn nur noch X Tickets da sind. ✅
 
 #### Superadmin Dashboard
-- [x] **Globales Banner-Management**: Ankündigungs-Banner für die ganze Seite im Admin aktivieren.
+- [x] **Globales Banner-Management**: Ankündigungs-Banner für die ganze Seite im Admin aktivieren. ✅
 - [x] **Auszahlungs-System (Payouts)**: Kontrolle, wann Vendors ihr Geld erhalten (z.B. erst nach Event-Ende). ✅
-- [x] **System Health / Logs**: Übersicht über Fehler, gescheiterte E-Mails, Stripe-Webhook-Status.
-- [x] **Erweiterte Steuerexporte**: DATEV-kompatible Exporte für die Buchhaltung.
-- [x] **Content Moderation Queue**: Neue Events müssen erst freigegeben werden, bevor sie online gehen.
-- [x] **Globales Gutschein-System**: Plattform-weite Geschenkgutscheine verwalten.
-- [x] **User Masquerading**: Als Admin in das Konto eines Vendors einloggen, um Support zu leisten.
-- [x] **Umfangreiches Audit-Log**: Wer hat wann was geändert?
+- [x] **System Health / Logs**: Übersicht über Fehler, gescheiterte E-Mails, Stripe-Webhook-Status. ✅
+- [x] **Erweiterte Steuerexporte**: DATEV-kompatible Exporte für die Buchhaltung. ✅
+- [x] **Content Moderation Queue**: Neue Events müssen erst freigegeben werden, bevor sie online gehen. ✅
+- [x] **Globales Gutschein-System**: Plattform-weite Geschenkgutscheine verwalten. ✅
+- [x] **User Masquerading**: Als Admin in das Konto eines Vendors einloggen, um Support zu leisten. ✅
+- [x] **Umfangreiches Audit-Log**: Wer hat wann was geändert? ✅
 
 *(Weitere 60+ Ideen in internem Backlog... Fokus jetzt auf die [x] markierten Tasks!)*

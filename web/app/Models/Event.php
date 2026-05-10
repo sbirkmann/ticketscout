@@ -19,7 +19,7 @@ class Event extends Model
             ->logOnlyDirty();
     }
     
-    protected $appends = ['is_favorited'];
+    protected $appends = ['is_favorited', 'average_rating'];
 
     protected function casts(): array
     {
@@ -107,5 +107,15 @@ class Event extends Model
         // This is not optimized for N+1 if loading many events. 
         // For N+1 prevention we should eager load a constrained relation or use `withExists`
         return $this->favorites()->where('user_id', auth()->id())->exists();
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function getAverageRatingAttribute()
+    {
+        return round($this->reviews()->where('is_approved', true)->avg('rating') ?? 0, 1);
     }
 }

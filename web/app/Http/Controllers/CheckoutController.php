@@ -109,10 +109,13 @@ class CheckoutController extends Controller
             $netAmount = $subtotal;
             $subtotal  = $netAmount + $taxAmount;
         }
+        // Calculate dynamic platform fee
+        $globalFee = (float) \App\Models\GlobalSetting::get('platform_fee', 5);
+        $vendorSettings = $event->vendor->vendorSettings ?? null;
+        $customFee = $vendorSettings ? $vendorSettings->custom_platform_fee : null;
+        $feePercentage = $customFee !== null ? (float) $customFee : $globalFee;
 
-        // Platform fee (5%)
-        $platformFee = round($subtotal * 0.05, 2);
-
+        $platformFee = round($subtotal * ($feePercentage / 100), 2);
         // Check if event has a linked seating plan (via location)
         $seatingPlan = null;
         if ($event->location_id) {
@@ -225,7 +228,13 @@ class CheckoutController extends Controller
             }
         }
 
-        $platformFee = round($totalAmount * 0.05, 2);
+        // Calculate dynamic platform fee
+        $globalFee = (float) \App\Models\GlobalSetting::get('platform_fee', 5);
+        $vendorSettings = $event->vendor->vendorSettings ?? null;
+        $customFee = $vendorSettings ? $vendorSettings->custom_platform_fee : null;
+        $feePercentage = $customFee !== null ? (float) $customFee : $globalFee;
+
+        $platformFee = round($totalAmount * ($feePercentage / 100), 2);
 
         // If nothing left to pay after voucher/promo/loyalty
         if ($totalAmount <= 0) {
