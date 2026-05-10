@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
     const props = defineProps({
         pendingEvents: Array,
@@ -21,6 +21,18 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
     
     const formatCurrency = (value) => {
         return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(value);
+    };
+
+    const updateVendorSettings = (vendor) => {
+        router.post(route('superadmin.vendors.update-settings', vendor.id), {
+            custom_platform_fee: vendor.fee_input,
+            has_advanced_pos: vendor.pos_input !== undefined ? vendor.pos_input : vendor.vendor_settings?.has_advanced_pos || false
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                vendor.fee_input = null;
+            }
+        });
     };
     </script>
     
@@ -158,7 +170,22 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
                         <div v-for="vendor in vendors" :key="vendor.id" class="p-4 border border-surface-200 rounded-2xl flex flex-col justify-between hover:border-brand-300 transition-colors bg-surface-50">
                             <div class="mb-4">
                                 <h4 class="font-bold text-surface-900">{{ vendor.name }}</h4>
-                                <p class="text-sm text-surface-500 truncate">{{ vendor.email }}</p>
+                                <p class="text-sm text-surface-500 truncate mb-4">{{ vendor.email }}</p>
+                                
+                                <div class="bg-white p-3 rounded-xl border border-surface-100">
+                                    <label class="block text-xs font-bold text-surface-700 mb-1">Individuelle Plattform-Gebühr (%)</label>
+                                    <div class="flex gap-2 mb-2">
+                                        <input type="number" step="0.01" min="0" max="100" v-model="vendor.fee_input" :placeholder="vendor.vendor_settings?.custom_platform_fee !== null ? vendor.vendor_settings?.custom_platform_fee : 'Global (5%)'" class="w-full text-sm rounded-lg border-surface-300 py-1 px-2 focus:ring-brand-400 focus:border-brand-400" />
+                                    </div>
+                                    <label class="flex items-center gap-2 text-xs font-bold text-surface-700 mb-3">
+                                        <input type="checkbox" v-model="vendor.pos_input" :true-value="true" :false-value="false" @change="vendor.pos_input = $event.target.checked" :checked="vendor.vendor_settings?.has_advanced_pos" class="rounded border-surface-300 text-brand-500 focus:ring-brand-500">
+                                        Advanced POS Freischalten
+                                    </label>
+                                    <button @click="updateVendorSettings(vendor)" class="w-full py-1.5 bg-surface-900 text-white text-xs font-bold rounded-lg hover:bg-surface-800 transition-colors shrink-0">
+                                        Speichern
+                                    </button>
+                                    <p class="text-[10px] text-surface-400 mt-2 text-center">Gebühr leer = globaler Standard.</p>
+                                </div>
                             </div>
                             <Link :href="route('superadmin.impersonate', vendor.id)" method="post" as="button" class="w-full py-2 text-sm font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-xl hover:bg-indigo-600 hover:text-white transition-colors text-center">
                                 Login als {{ vendor.name }}

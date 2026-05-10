@@ -27,7 +27,8 @@ const form = useForm({
     tags: '',
     artist_ids: [],
     ticket_template_id: '',
-    seating_plan_id: ''
+    seating_plan_id: '',
+    enable_wallet: false
 });
 
 const isNewLocation = ref(false);
@@ -272,13 +273,23 @@ const generateDescription = () => {
                         <!-- Settings -->
                         <div>
                             <h3 class="text-lg font-bold text-surface-900 border-b border-surface-200 pb-2 mb-4">Einstellungen</h3>
-                            <label class="flex items-center gap-3 p-4 rounded-xl border border-surface-200 hover:bg-surface-50 cursor-pointer transition-colors mb-4">
-                                <input type="checkbox" v-model="form.show_remaining_tickets" class="rounded border-surface-300 text-brand-500 shadow-sm focus:ring-brand-500">
-                                <div>
-                                    <span class="block font-bold text-surface-900">Restplätze im Frontend anzeigen</span>
-                                    <span class="text-sm text-surface-500">Zeigt an, wie viele Tickets pro Kategorie noch verfügbar sind (erzeugt Dringlichkeit/FOMO).</span>
-                                </div>
-                            </label>
+                            <div class="space-y-4">
+                                <label class="flex items-center gap-3 p-4 rounded-xl border border-surface-200 hover:bg-surface-50 cursor-pointer transition-colors">
+                                    <input type="checkbox" v-model="form.show_remaining_tickets" class="rounded border-surface-300 text-brand-500 shadow-sm focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-bold text-surface-900">Restplätze im Frontend anzeigen</span>
+                                        <span class="text-sm text-surface-500">Zeigt an, wie viele Tickets pro Kategorie noch verfügbar sind (erzeugt Dringlichkeit/FOMO).</span>
+                                    </div>
+                                </label>
+
+                                <label class="flex items-center gap-3 p-4 rounded-xl border border-surface-200 hover:bg-surface-50 cursor-pointer transition-colors">
+                                    <input type="checkbox" v-model="form.enable_wallet" class="rounded border-surface-300 text-brand-500 shadow-sm focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-bold text-surface-900">Cashless Payment (Guthaben-System) aktivieren</span>
+                                        <span class="text-sm text-surface-500">Erlaubt Kunden, Guthaben auf ihre Tickets zu laden, um vor Ort damit zu bezahlen (POS).</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Status & Submit -->

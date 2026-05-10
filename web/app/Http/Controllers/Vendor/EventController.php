@@ -83,6 +83,7 @@ class EventController extends Controller
             'artist_ids' => 'nullable|array',
             'artist_ids.*' => 'exists:artists,id',
             'show_remaining_tickets' => 'boolean',
+            'enable_wallet' => 'boolean',
         ]);
 
         $locationId = $validated['location_id'];
@@ -111,6 +112,7 @@ class EventController extends Controller
             'end_date' => $validated['end_date'],
             'status' => $validated['status'],
             'show_remaining_tickets' => $validated['show_remaining_tickets'] ?? true,
+            'enable_wallet' => $validated['enable_wallet'] ?? false,
             'tags' => $validated['tags'] ? array_map('trim', explode(',', $validated['tags'])) : [],
         ]);
 
@@ -185,6 +187,7 @@ class EventController extends Controller
             'artist_ids' => 'nullable|array',
             'artist_ids.*' => 'exists:artists,id',
             'show_remaining_tickets' => 'boolean',
+            'enable_wallet' => 'boolean',
         ]);
 
         $locationId = $validated['location_id'];
@@ -211,6 +214,7 @@ class EventController extends Controller
         $event->end_date = $validated['end_date'];
         $event->status = $validated['status'];
         $event->show_remaining_tickets = $validated['show_remaining_tickets'] ?? true;
+        $event->enable_wallet = $validated['enable_wallet'] ?? false;
         $event->tags = $validated['tags'] ? array_map('trim', explode(',', $validated['tags'])) : [];
 
         if ($request->hasFile('image')) {
@@ -354,5 +358,70 @@ class EventController extends Controller
         return response()->json([
             'description' => $generated
         ]);
+    }
+
+
+    public function batchCreate(Event $event)
+    {
+        if ($event->vendor_id !== auth()->id()) abort(403);
+
+        return Inertia::render('Vendor/Events/BatchCreate', [
+            'event' => $event
+        ]);
+    }
+
+    public function batchStore(Request $request, Event $event)
+    {
+        if ($event->vendor_id !== auth()->id()) abort(403);
+
+        $validated = $request->validate([
+            'dates' => 'required|array|min:1',
+            'dates.*.start_date' => 'required|date',
+            'dates.*.end_date' => 'nullable|date',
+        ]);
+
+        $createdEvents = 0;
+
+        foreach ($validated['dates'] as $date) {
+            $newEvent = $event->replicate();
+            $newEvent->start_date = $date['start_date'];
+            $newEvent->end_date = $date['end_date'] ?? null;
+            $newEvent->parent_event_id = $event->parent_event_id ?? $event->id; // Link to parent
+            $newEvent->slug = \Illuminate\Support\Str::slug($event->title) . '-' . uniqid();
+            
+            // Keep original status or make them drafts? Let's make them published if original is published
+            $newEvent->status = 'draft'; 
+            $newEvent->is_approved = false;
+            $newEvent->save();
+
+            // Duplicate categories
+            foreach ($event->ticketCategories as $cat) {
+                $newCat = $cat->replicate();
+                $newCat->event_id = $newEvent->id;
+                $newCat->save();
+            }
+
+            // Duplicate addons
+            foreach ($event->addons as $addon) {
+                $newAddon = $addon->replicate();
+                $newAddon->event_id = $newEvent->id;
+                $newAddon->save();
+                // We should also duplicate addon-ticket-category mappings if needed, 
+                // but let's keep it simple for now or fetch new categories.
+            }
+
+            // Artists
+            $newEvent->artists()->sync($event->artists->pluck('id'));
+
+            $createdEvents++;
+        }
+
+        // Set the original event as parent if it wasn't already
+        if (!$event->parent_event_id) {
+            $event->parent_event_id = $event->id;
+            $event->save();
+        }
+
+        return redirect()->route('vendor.events.index')->with('success', "$createdEvents Serientermine wurden als Entwurf erfolgreich erstellt.");
     }
 }

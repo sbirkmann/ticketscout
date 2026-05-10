@@ -102,12 +102,40 @@ function formatDate(dateString) {
                                     </div>
                                     
                                     <div class="mt-6 flex flex-wrap gap-3">
-                                        <button class="bg-brand-50 text-brand-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-brand-100 transition-colors">
-                                            Tickets ansehen
-                                        </button>
-                                        <button class="bg-surface-50 text-surface-600 px-4 py-2 rounded-xl text-sm font-bold border border-surface-200 hover:bg-surface-100 transition-colors">
+                                        <a :href="route('customer.orders.tickets', order.id)" target="_blank" class="bg-brand-50 text-brand-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-brand-100 transition-colors inline-block text-center">
+                                            Tickets (PDF)
+                                        </a>
+                                        <a :href="route('customer.orders.invoice', order.id)" target="_blank" class="bg-surface-50 text-surface-600 px-4 py-2 rounded-xl text-sm font-bold border border-surface-200 hover:bg-surface-100 transition-colors inline-block text-center">
                                             Rechnung (PDF)
-                                        </button>
+                                        </a>
+                                    </div>
+
+                                    <!-- Wallet System -->
+                                    <div v-if="order.event.enable_wallet" class="mt-6 pt-6 border-t border-surface-100">
+                                        <h4 class="font-bold text-surface-900 mb-3 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-brand-500" viewBox="0 0 20 20" fill="currentColor">
+                                              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                              <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd" />
+                                            </svg>
+                                            Ticket Guthaben (Cashless)
+                                        </h4>
+                                        <div class="space-y-3">
+                                            <div v-for="ticket in order.tickets" :key="ticket.id" class="flex items-center justify-between bg-surface-50 p-3 rounded-xl border border-surface-200">
+                                                <div>
+                                                    <span class="block font-bold text-sm text-surface-900">{{ ticket.ticket_category?.name || 'Ticket' }} #{{ ticket.code.substring(0,8) }}</span>
+                                                    <span class="text-xs text-surface-500">
+                                                        <span v-if="ticket.attendee_name">{{ ticket.attendee_name }}</span>
+                                                        <span v-else>Aktuelles Guthaben: {{ Number(ticket.wallet_balance || 0).toFixed(2) }} €</span>
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <span v-if="ticket.attendee_name" class="font-bold text-surface-900 bg-white px-2 py-1 rounded shadow-sm border border-surface-100">{{ Number(ticket.wallet_balance || 0).toFixed(2) }} €</span>
+                                                    <Link :href="route('customer.wallet.show', ticket.id)" class="bg-brand-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-brand-600 transition-colors">
+                                                        Aufladen / Verlauf
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

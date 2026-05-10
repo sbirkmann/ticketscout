@@ -31,7 +31,7 @@ class DashboardController extends Controller
             'active_vendors' => \App\Models\User::role('vendor')->count(),
         ];
 
-        $vendors = \App\Models\User::role('vendor')->select('id', 'name', 'email')->get();
+        $vendors = \App\Models\User::role('vendor')->select('id', 'name', 'email')->with('vendorSettings')->get();
 
         return Inertia::render('Admin/Dashboard', [
             'pendingEvents' => $pendingEvents,
@@ -51,5 +51,24 @@ class DashboardController extends Controller
     {
         $location->update(['is_approved' => true]);
         return back()->with('success', 'Location freigegeben.');
+    }
+
+    public function updateVendorSettings(Request $request, \App\Models\User $user)
+    {
+        $validated = $request->validate([
+            'custom_platform_fee' => 'nullable|numeric|min:0|max:100',
+            'has_advanced_pos' => 'boolean'
+        ]);
+
+        $settings = $user->vendorSettings()->firstOrCreate([]);
+        if (array_key_exists('custom_platform_fee', $validated)) {
+            $settings->custom_platform_fee = $validated['custom_platform_fee'];
+        }
+        if (array_key_exists('has_advanced_pos', $validated)) {
+            $settings->has_advanced_pos = $validated['has_advanced_pos'];
+        }
+        $settings->save();
+
+        return back()->with('success', 'Veranstalter-Einstellungen aktualisiert.');
     }
 }

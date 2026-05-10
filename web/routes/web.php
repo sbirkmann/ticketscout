@@ -21,6 +21,7 @@ Route::get('/karte', [FrontendController::class, 'map'])->name('map');
 Route::get('/category/{slug}', [FrontendController::class, 'showCategory'])->name('categories.show');
 Route::get('/artists', [FrontendController::class, 'artists'])->name('artists.index');
 Route::get('/artist/{slug}', [FrontendController::class, 'showArtist'])->name('artists.show');
+Route::get('/veranstalter/{id}', [FrontendController::class, 'showVendor'])->name('vendor.show');
 Route::get('/event/{slug}', [FrontendController::class, 'showEvent'])->name('event.show');
 Route::post('/event/{event}/waitlist', [\App\Http\Controllers\WaitlistController::class, 'store'])->name('event.waitlist');
 Route::get('/event/{slug}/ics', [FrontendController::class, 'downloadIcs'])->name('event.ics');
@@ -87,6 +88,13 @@ Route::get('/dashboard', function () {
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [CustomerDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/orders/{order}/tickets', [CustomerDashboardController::class, 'downloadTickets'])->name('orders.tickets');
+    Route::get('/orders/{order}/invoice', [CustomerDashboardController::class, 'downloadInvoice'])->name('orders.invoice');
+
+    // Wallet (Cashless)
+    Route::get('/wallet/{ticket}', [\App\Http\Controllers\Customer\WalletController::class, 'show'])->name('wallet.show');
+    Route::post('/wallet/{ticket}/topup', [\App\Http\Controllers\Customer\WalletController::class, 'topup'])->name('wallet.topup');
+    Route::get('/wallet/{ticket}/success', [\App\Http\Controllers\Customer\WalletController::class, 'success'])->name('wallet.success');
 });
 
 Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('superadmin.')->group(function () {
@@ -145,6 +153,9 @@ Route::middleware(['auth', 'role:superadmin'])->prefix('superadmin')->name('supe
     
     // Payouts
     Route::resource('payouts', \App\Http\Controllers\Superadmin\PayoutController::class)->only(['index', 'store', 'update']);
+
+    // Vendors Settings
+    Route::post('/vendors/{user}/settings', [\App\Http\Controllers\Superadmin\DashboardController::class, 'updateVendorSettings'])->name('vendors.update-settings');
 });
 
 Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->group(function () {
@@ -159,10 +170,31 @@ Route::middleware(['auth', 'role:vendor'])->prefix('vendor')->name('vendor.')->g
     // Event Management
     Route::post('events/ai-description', [\App\Http\Controllers\Vendor\EventController::class, 'generateAiDescription'])->name('events.ai-description');
     Route::post('events/{event}/duplicate', [\App\Http\Controllers\Vendor\EventController::class, 'duplicate'])->name('events.duplicate');
+    Route::get('events/{event}/batch', [\App\Http\Controllers\Vendor\EventController::class, 'batchCreate'])->name('events.batch.create');
+    Route::post('events/{event}/batch', [\App\Http\Controllers\Vendor\EventController::class, 'batchStore'])->name('events.batch.store');
     Route::get('events/{event}/seating', [\App\Http\Controllers\Vendor\EventController::class, 'seating'])->name('events.seating');
     Route::put('events/{event}/seating', [\App\Http\Controllers\Vendor\EventController::class, 'updateSeating'])->name('events.seating.update');
     Route::post('/events/bulk', [\App\Http\Controllers\Vendor\EventController::class, 'bulk'])->name('events.bulk');
     Route::resource('events', \App\Http\Controllers\Vendor\EventController::class)->names('events');
+    Route::get('/events/{event}/pos', [\App\Http\Controllers\Vendor\EventPosController::class, 'show'])->name('events.pos.show');
+    Route::put('/events/{event}/pos', [\App\Http\Controllers\Vendor\EventPosController::class, 'update'])->name('events.pos.update');
+
+    // POS Terminals
+    Route::get('/pos-terminals', [\App\Http\Controllers\Vendor\PosTerminalController::class, 'index'])->name('pos-terminals.index');
+    Route::post('/pos-terminals', [\App\Http\Controllers\Vendor\PosTerminalController::class, 'store'])->name('pos-terminals.store');
+    Route::delete('/pos-terminals/{pos_terminal}', [\App\Http\Controllers\Vendor\PosTerminalController::class, 'destroy'])->name('pos-terminals.destroy');
+
+    // POS Articles
+    Route::get('/pos-articles', [\App\Http\Controllers\Vendor\PosArticleController::class, 'index'])->name('pos-articles.index');
+    Route::post('/pos-articles', [\App\Http\Controllers\Vendor\PosArticleController::class, 'store'])->name('pos-articles.store');
+    Route::put('/pos-articles/{pos_article}', [\App\Http\Controllers\Vendor\PosArticleController::class, 'update'])->name('pos-articles.update');
+    Route::delete('/pos-articles/{pos_article}', [\App\Http\Controllers\Vendor\PosArticleController::class, 'destroy'])->name('pos-articles.destroy');
+    Route::post('/pos-article-categories', [\App\Http\Controllers\Vendor\PosArticleController::class, 'storeCategory'])->name('pos-article-categories.store');
+    Route::delete('/pos-article-categories/{pos_article_category}', [\App\Http\Controllers\Vendor\PosArticleController::class, 'destroyCategory'])->name('pos-article-categories.destroy');
+
+    // POS Reports / Z-Bons
+    Route::get('/pos-reports', [\App\Http\Controllers\Vendor\PosReportController::class, 'index'])->name('pos-reports.index');
+    Route::get('/pos-reports/{pos_shift}', [\App\Http\Controllers\Vendor\PosReportController::class, 'showShift'])->name('pos-reports.show');
 
     // Settings & Onboarding
     Route::get('/settings', [\App\Http\Controllers\Vendor\SettingsController::class, 'index'])->name('settings.index');
@@ -235,3 +267,37 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// POS Cashless Interface
+Route::prefix('pos')->name('pos.')->group(function () {
+    Route::get('/login', [\App\Http\Controllers\PosController::class, 'showLogin'])->name('login');
+    Route::post('/login', [\App\Http\Controllers\PosController::class, 'login'])->name('login.post');
+    Route::post('/logout', [\App\Http\Controllers\PosController::class, 'logout'])->name('logout');
+    
+    // Protected by session check in controller
+    Route::get('/', [\App\Http\Controllers\PosController::class, 'dashboard'])->name('dashboard');
+    Route::post('/shift/open', [\App\Http\Controllers\PosController::class, 'openShift'])->name('shift.open');
+    Route::get('/api/pos/receipts/{terminal}', [App\Http\Controllers\PosController::class, 'recentReceipts'])->name('receipts.recent');
+    Route::post('/api/pos/receipts/{receipt}/refund', [App\Http\Controllers\PosController::class, 'refundReceipt'])->name('receipts.refund');
+    
+    Route::post('/shift/close', [\App\Http\Controllers\PosController::class, 'closeShift'])->name('shift.close');
+    Route::post('/fetch-ticket', [\App\Http\Controllers\PosController::class, 'fetchTicket'])->name('fetch-ticket');
+    Route::post('/charge/{ticket}', [\App\Http\Controllers\PosController::class, 'charge'])->name('charge');
+    Route::post('/checkout', [\App\Http\Controllers\PosController::class, 'checkout'])->name('checkout');
+
+    // Stripe Terminal
+    Route::post('/stripe/connection-token', [\App\Http\Controllers\PosStripeController::class, 'connectionToken'])->name('stripe.token');
+    Route::post('/stripe/create-intent', [\App\Http\Controllers\PosStripeController::class, 'createPaymentIntent'])->name('stripe.create-intent');
+    Route::post('/stripe/capture-intent', [\App\Http\Controllers\PosStripeController::class, 'capturePaymentIntent'])->name('stripe.capture-intent');
+});
+
+// POS Hardware Proxy API
+Route::prefix('api/pos')->group(function () {
+    Route::get('print-jobs', [\App\Http\Controllers\Api\PosProxyController::class, 'getPrintJobs']);
+    Route::post('print-jobs/{job}/status', [\App\Http\Controllers\Api\PosProxyController::class, 'updateJobStatus']);
+    Route::get('hub/sync', [\App\Http\Controllers\Api\PosProxyController::class, 'syncTransactions']);
+    
+    // Exports
+    Route::get('export/csv', [\App\Http\Controllers\Api\PosExportController::class, 'exportCsv']);
+    Route::get('export/json', [\App\Http\Controllers\Api\PosExportController::class, 'exportJson']);
+});

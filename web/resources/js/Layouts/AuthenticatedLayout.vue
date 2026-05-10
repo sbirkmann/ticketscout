@@ -52,6 +52,15 @@ const page = usePage();
                                 <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.staff.index')" :active="route().current('vendor.staff.*')">
                                     Team & Scanner
                                 </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.pos-terminals.index')" :active="route().current('vendor.pos-terminals.*')">
+                                    POS-Kassen
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.pos-articles.index')" :active="route().current('vendor.pos-articles.*')">
+                                    POS-Artikel
+                                </NavLink>
+                                <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.pos-reports.index')" :active="route().current('vendor.pos-reports.*')">
+                                    POS-Berichte
+                                </NavLink>
                                 <NavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.invoices.index')" :active="route().current('vendor.invoices.index')">
                                     Rechnungen
                                 </NavLink>
@@ -169,6 +178,9 @@ const page = usePage();
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.staff.index')" :active="route().current('vendor.staff.*')">
                             Team & Scanner
+                        </ResponsiveNavLink>
+                        <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.pos-terminals.index')" :active="route().current('vendor.pos-terminals.*')">
+                            POS-Kassen
                         </ResponsiveNavLink>
                         <ResponsiveNavLink v-if="$page.props.auth?.roles?.includes('vendor')" :href="route('vendor.invoices.index')" :active="route().current('vendor.invoices.index')">
                             Rechnungen

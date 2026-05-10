@@ -354,7 +354,7 @@ class FrontendController extends Controller
         
         $locations = Location::where('city', $city->name)->where('is_approved', true)->get();
         $locationIds = $locations->pluck('id');
-        
+
         $events = Event::whereIn('location_id', $locationIds)
             ->where('status', 'published')
             ->where('is_approved', true)
@@ -370,6 +370,28 @@ class FrontendController extends Controller
         return Inertia::render('Cities/Show', [
             'city' => $city,
             'locations' => $locations,
+            'events' => $events
+        ]);
+    }
+
+    public function showVendor($id)
+    {
+        $vendor = \App\Models\User::role('vendor')->with('vendorSettings')->findOrFail($id);
+        
+        $events = Event::where('vendor_id', $vendor->id)
+            ->where('status', 'published')
+            ->where('is_approved', true)
+            ->whereDate('start_date', '>=', now())
+            ->with(['location', 'category', 'ticketCategories'])
+            ->orderBy('start_date', 'asc')
+            ->get()
+            ->map(function ($event) {
+                $event->min_price = $event->ticketCategories->min('price');
+                return $event;
+            });
+
+        return Inertia::render('VendorProfile/Show', [
+            'vendor' => $vendor,
             'events' => $events
         ]);
     }

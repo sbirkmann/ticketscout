@@ -105,4 +105,44 @@ class DashboardController extends Controller
             'recommendations' => $recommendations
         ]);
     }
+
+    public function downloadTickets(Order $order, \App\Services\TicketService $ticketService)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+        
+        $order->load(['tickets.ticketCategory.event.vendor', 'tickets.order']);
+        
+        $pdfContent = $ticketService->generatePdfForOrder($order);
+        
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="tickets-' . $order->id . '.pdf"');
+    }
+
+    public function downloadInvoice(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $invoice = \App\Models\Invoice::where('order_id', $order->id)
+            ->where('type', 'vendor_to_customer')
+            ->first();
+
+        if (!$invoice || !$invoice->pdf_path) {
+            // Generate it on the fly if it somehow doesn't exist
+            $invoiceService = new \App\Services\InvoiceService();
+            $invoice = $invoiceService->generateVendorToCustomerInvoice($order);
+        }
+
+        $path = storage_path('app/' . $invoice->pdf_path);
+        
+        if (!file_exists($path)) {
+            abort(404, 'Invoice not found.');
+        }
+
+        return response()->download($path, 'Rechnung-' . $invoice->invoice_number . '.pdf');
+    }
 }

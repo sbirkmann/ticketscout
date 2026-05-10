@@ -122,8 +122,15 @@ function resetAddonForm() {
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <Link :href="route('vendor.events.duplicate', event.id)" method="post" as="button" class="bg-surface-100 hover:bg-surface-200 text-surface-700 px-5 py-2 rounded-xl font-medium transition-colors text-sm">
-                        Als neuen Termin duplizieren (Serie)
+                    <Link v-if="event.enable_wallet && $page.props.auth.user.vendor_settings?.has_advanced_pos" :href="route('vendor.events.pos.show', event.id)" class="bg-surface-800 hover:bg-surface-900 text-white px-4 py-2 rounded-xl font-medium transition-colors text-sm shadow-sm flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        Kasse (POS) Setup
+                    </Link>
+                    <Link :href="route('vendor.events.duplicate', event.id)" method="post" as="button" class="bg-surface-100 hover:bg-surface-200 text-surface-700 px-4 py-2 rounded-xl font-medium transition-colors text-sm">
+                        Duplizieren
+                    </Link>
+                    <Link :href="route('vendor.events.batch.create', event.id)" class="bg-brand-100 hover:bg-brand-200 text-brand-700 px-4 py-2 rounded-xl font-medium transition-colors text-sm">
+                        Serientermine erstellen
                     </Link>
                     <Link :href="route('vendor.events.edit', event.id)" class="bg-brand-500 hover:bg-brand-600 text-white px-5 py-2 rounded-xl font-medium transition-colors text-sm shadow-sm">
                         Event bearbeiten

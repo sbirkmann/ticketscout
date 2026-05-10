@@ -21,6 +21,10 @@ const form = useForm({
     email_template: props.settings.email_template || 'Vielen Dank für deine Bestellung! Anbei findest du deine Tickets.',
     sender_name: props.settings.sender_name || '',
     custom_domain: props.settings.custom_domain || '',
+    public_email: props.settings.public_email || '',
+    public_phone: props.settings.public_phone || '',
+    pos_receipt_header: props.settings.pos_receipt_header || '',
+    pos_receipt_footer: props.settings.pos_receipt_footer || '',
 });
 
 const submit = () => {
@@ -84,6 +88,20 @@ const submit = () => {
                                         <input v-model="form.vat_id" type="text" class="w-full rounded-xl border-surface-300 focus:ring-brand-500">
                                     </div>
                                 </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-surface-100 mt-4">
+                                    <div class="col-span-full mb-1">
+                                        <h4 class="text-sm font-bold text-surface-900">Öffentlicher Kontakt (Kunden-Support)</h4>
+                                        <p class="text-xs text-surface-500">Diese Daten werden auf deiner öffentlichen Veranstalterseite und in E-Mails an die Kunden angezeigt.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-surface-700 mb-1">Öffentliche E-Mail</label>
+                                        <input v-model="form.public_email" type="email" class="w-full rounded-xl border-surface-300 focus:ring-brand-500" placeholder="support@deine-firma.de">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-surface-700 mb-1">Öffentliche Telefonnummer</label>
+                                        <input v-model="form.public_phone" type="text" class="w-full rounded-xl border-surface-300 focus:ring-brand-500" placeholder="+49 123 456789">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -131,6 +149,22 @@ const submit = () => {
                                         <label class="block text-sm font-medium text-surface-700 mb-1">Individueller Fußzeilen-Text (auf PDF-Rechnungen)</label>
                                         <textarea v-model="form.invoice_footer_text" rows="3" class="w-full rounded-xl border-surface-300 focus:ring-brand-500"></textarea>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- POS System Settings -->
+                        <div>
+                            <h3 class="text-lg font-bold text-surface-900 border-b border-surface-200 pb-2 mb-4">Kassensystem (POS) Belege</h3>
+                            <div class="space-y-4 bg-surface-50 p-4 rounded-2xl border border-surface-200">
+                                <div>
+                                    <label class="block text-sm font-medium text-surface-700 mb-1">Kassenbon Kopfzeile (Header)</label>
+                                    <textarea v-model="form.pos_receipt_header" rows="3" class="w-full rounded-xl border-surface-300 focus:ring-brand-500 font-mono text-sm" placeholder="z.B. Veranstalter Mustermann&#10;Musterstraße 1&#10;12345 Musterstadt"></textarea>
+                                    <p class="text-xs text-surface-500 mt-1">Dieser Text erscheint ganz oben auf jedem Kassenbon. Er kann pro Event überschrieben werden.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-surface-700 mb-1">Kassenbon Fußzeile (Footer)</label>
+                                    <textarea v-model="form.pos_receipt_footer" rows="3" class="w-full rounded-xl border-surface-300 focus:ring-brand-500 font-mono text-sm" placeholder="Vielen Dank für deinen Besuch!"></textarea>
                                 </div>
                             </div>
                         </div>
